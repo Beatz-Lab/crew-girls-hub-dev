@@ -1731,7 +1731,7 @@
   }
 
 
-  /* Firebase login gate — v6.12 */
+  /* Firebase login gate — v7.0 */
   body.auth-pending #setupScreen,
   body.auth-pending #app,
   body.auth-required #setupScreen,
@@ -1805,7 +1805,7 @@
   }
 
 
-  /* Firebase member profile gate — v6.12 */
+  /* Firebase member profile gate — v7.0 */
   body.profile-required #authScreen,
   body.profile-required #setupScreen,
   body.profile-required #app{display:none!important}
@@ -1829,12 +1829,59 @@
   }
 
 
-  /* Firebase cloud data + role controls — v6.12 */
+  /* Firebase cloud data + role controls — v7.0 */
   .admin-only.hidden-by-role{display:none!important}
   .role-badge{
     display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
     background:var(--accent-soft);color:var(--accent);font-size:.68rem;font-weight:800;
     margin-left:6px;vertical-align:middle
+  }
+
+
+  /* v7.0 role dashboards and gig availability */
+  .admin-dashboard{display:none}
+  body[data-user-role="admin"] .admin-dashboard,
+  body[data-user-role="owner"] .admin-dashboard{display:block}
+  body[data-user-role="admin"] .crew-only,
+  body[data-user-role="owner"] .crew-only{display:none!important}
+  body[data-user-role="member"] .admin-only-page{display:none!important}
+  body[data-user-role="admin"] .bottom-nav,
+  body[data-user-role="owner"] .bottom-nav{grid-template-columns:repeat(3,1fr)}
+  body[data-user-role="admin"] .bottom-nav .crew-nav,
+  body[data-user-role="owner"] .bottom-nav .crew-nav{display:none!important}
+  body[data-user-role="member"] .admin-nav{display:none!important}
+  .admin-hero{
+    padding:22px;border-radius:26px;margin-bottom:16px;
+    background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,.025)),var(--panel);
+    border:1px solid rgba(255,255,255,.08)
+  }
+  .admin-hero h2{margin:0 0 6px;font-size:1.5rem}
+  .admin-hero p{margin:0;color:var(--muted);line-height:1.5}
+  .admin-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+  .admin-stat{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:17px;padding:14px;text-align:center}
+  .admin-stat strong{display:block;font-size:1.45rem;color:var(--accent)}
+  .admin-stat span{font-size:.72rem;color:var(--muted)}
+  .response-summary{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+  .response-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.07);font-size:.72rem;font-weight:800}
+  .response-chip.available{color:#8ce9bc;background:rgba(90,211,156,.12)}
+  .response-chip.maybe{color:#ffe09a;background:rgba(255,204,102,.12)}
+  .response-chip.unavailable{color:#ffadb5;background:rgba(255,90,105,.12)}
+  .response-chip.pending{color:var(--muted)}
+  .response-list{display:grid;gap:7px;margin-top:10px}
+  .response-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.035)}
+  .response-row strong{font-size:.83rem}
+  .response-row small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+  .availability-box{margin-top:13px;padding:12px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+  .availability-box h5{margin:0 0 9px;font-size:.82rem}
+  .availability-controls{display:grid;grid-template-columns:1fr;gap:8px}
+  .availability-controls select,.availability-controls input{padding:10px}
+  .sync-note{font-size:.75rem;color:var(--muted);margin-top:8px}
+  .admin-gig-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .admin-empty{padding:18px;text-align:center;color:var(--muted)}
+  @media(max-width:560px){
+    .admin-stat-grid{grid-template-columns:repeat(3,1fr)}
+    .admin-stat{padding:11px 7px}
+    .admin-stat strong{font-size:1.2rem}
   }
 
 </style>
@@ -1930,7 +1977,26 @@
 </header>
 
   <main>
-    <section id="homePage" class="page active">
+    <section id="adminPage" class="page admin-only-page">
+      <div class="admin-hero">
+        <div class="eyebrow">◆ Crew control centre</div>
+        <h2 id="adminWelcome">Admin dashboard</h2>
+        <p>Add and manage shared gigs, then see who is available, unsure, unavailable or still needs to reply.</p>
+        <div class="admin-gig-actions">
+          <button class="primary" type="button" data-open="bookingModal">＋ Add a gig</button>
+          <button class="secondary" type="button" id="adminRefreshBtn">↻ Refresh replies</button>
+        </div>
+      </div>
+      <div class="admin-stat-grid">
+        <div class="admin-stat"><strong id="adminUpcomingCount">0</strong><span>upcoming gigs</span></div>
+        <div class="admin-stat"><strong id="adminReplyCount">0</strong><span>replies received</span></div>
+        <div class="admin-stat"><strong id="adminPendingCount">0</strong><span>awaiting reply</span></div>
+      </div>
+      <div class="section-title"><h2>Upcoming gigs & crew replies</h2><small>Live cloud view</small></div>
+      <div id="adminGigList" class="list"></div>
+    </section>
+
+    <section id="homePage" class="page active crew-only">
       <div class="hero">
         <div class="eyebrow">✦ Crew mode</div>
         <h2 id="welcomeName">Hi 👋</h2>
@@ -1988,7 +2054,7 @@
       </div>
     </section>
 
-    <section id="routinesPage" class="page">
+    <section id="routinesPage" class="page crew-only">
       <div class="section-title"><h2>Routines</h2><button class="primary" data-open="routineModal">+ Add</button></div>
       <div class="tabs-inline" id="routineFilters">
         <button class="filter-btn active" data-filter="all">All</button>
@@ -1998,7 +2064,7 @@
       <div class="list" id="routineList" style="margin-top:12px"></div>
     </section>
 
-    <section id="trainingPage" class="page">
+    <section id="trainingPage" class="page crew-only">
       <div class="section-title"><h2>Personal bests</h2><button class="primary" data-open="flexModal">+ Add flex</button></div>
       <div class="grid">
         <div class="card stat"><strong id="bestLeft">—</strong><span>best left split</span></div>
@@ -2023,7 +2089,7 @@
     </section>
 
 
-    <section id="stretchesPage" class="page">
+    <section id="stretchesPage" class="page crew-only">
       <div class="section-title">
         <h2>Stretch Library</h2>
       </div>
@@ -2135,7 +2201,7 @@
     </section>
 
 
-    <section id="musicPage" class="page">
+    <section id="musicPage" class="page crew-only">
       <div class="section-title">
         <h2>Music Library</h2>
       </div>
@@ -2421,7 +2487,7 @@
     </section>
 
 
-    <section id="videosPage" class="page">
+    <section id="videosPage" class="page crew-only">
       <div class="section-title">
         <h2>Video Library</h2>
       </div>
@@ -2500,7 +2566,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v6.12</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v7.0</strong><br>
         Video Library
       </div>
 
@@ -2508,10 +2574,11 @@
   </main>
 
   <nav class="bottom-nav">
-    <button class="nav-btn active" data-page="homePage"><span>⌂</span>Home</button>
-    <button class="nav-btn" data-page="routinesPage"><span>♫</span>Routines</button>
-    <button class="nav-btn" data-page="trainingPage"><span>✦</span>Training</button>
-    <button class="nav-btn" data-page="stretchesPage"><span>☽</span>Stretches</button>
+    <button class="nav-btn admin-nav" data-page="adminPage"><span>◆</span>Admin</button>
+    <button class="nav-btn active crew-nav" data-page="homePage"><span>⌂</span>Home</button>
+    <button class="nav-btn crew-nav" data-page="routinesPage"><span>♫</span>Routines</button>
+    <button class="nav-btn crew-nav" data-page="trainingPage"><span>✦</span>Training</button>
+    <button class="nav-btn crew-nav" data-page="stretchesPage"><span>☽</span>Stretches</button>
     <button class="nav-btn" data-page="bookingsPage"><span>◆</span>Gigs</button>
     <button class="nav-btn" data-page="profilePage"><span>●</span>Profile</button>
   </nav>
@@ -2658,7 +2725,8 @@
     signInWithEmailAndPassword, sendPasswordResetEmail, signOut
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc, serverTimestamp
+    getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc,
+    collection, query, where, onSnapshot, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -2688,6 +2756,8 @@
   let signedInUser = null;
   let signedInProfile = null;
   let signedInRole = "member";
+  let stopGigsListener = null;
+  let stopResponsesListener = null;
 
   const isAdmin = () => signedInRole === "admin" || signedInRole === "owner";
 
@@ -2713,21 +2783,30 @@
   function waitForCrewApp(){
     if(typeof window.crewLoadSignedInUser === "function") return Promise.resolve();
     return new Promise(resolve=>{
-      window.addEventListener("crew-app-ready", resolve, {once:true});
+      window.addEventListener("crew-app-ready",resolve,{once:true});
       setTimeout(resolve,2500);
     });
   }
-
+  async function loadDirectory(){
+    if(!isAdmin()) return [];
+    const snapshot = await getDocs(collection(db,"users"));
+    return snapshot.docs.map(d=>({id:d.id,...d.data()}));
+  }
+  async function loadResponses(){
+    const ref = collection(db,"gigResponses");
+    const snapshot = isAdmin()
+      ? await getDocs(ref)
+      : await getDocs(query(ref,where("userId","==",signedInUser.uid)));
+    return snapshot.docs.map(d=>({id:d.id,...d.data()}));
+  }
   async function saveProfileAndPersonalData(payload){
     if(!signedInUser || !payload) return;
-    const personalData = {...payload};
+    const personalData={...payload};
     delete personalData.bookings;
-
-    const profile = personalData.profile || {};
+    const profile=personalData.profile || {};
     await Promise.all([
       setDoc(doc(db,"memberData",signedInUser.uid),{
-        data:personalData,
-        updatedAt:serverTimestamp()
+        data:personalData,updatedAt:serverTimestamp()
       },{merge:true}),
       setDoc(doc(db,"users",signedInUser.uid),{
         displayName:String(profile.name || "").trim(),
@@ -2739,15 +2818,13 @@
         updatedAt:serverTimestamp()
       },{merge:true})
     ]);
-    signedInProfile = {...signedInProfile,
-      displayName:profile.name || "",
-      goal:profile.goal || "",
-      colour:profile.colour || "#ff007f",
-      running:Boolean(profile.running)
+    signedInProfile={...signedInProfile,
+      displayName:profile.name || "",goal:profile.goal || "",
+      colour:profile.colour || "#ff007f",running:Boolean(profile.running)
     };
   }
 
-  window.addEventListener("crew-personal-save", async event=>{
+  window.addEventListener("crew-personal-save",async event=>{
     try{
       await saveProfileAndPersonalData(event.detail);
       window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"personal"}}));
@@ -2757,13 +2834,12 @@
     }
   });
 
-  window.addEventListener("crew-shared-gigs-save", async event=>{
+  window.addEventListener("crew-shared-gigs-save",async event=>{
     if(!signedInUser || !isAdmin()) return;
     try{
       await setDoc(doc(db,"sharedData","gigs"),{
-        bookings:Array.isArray(event.detail) ? event.detail : [],
-        updatedAt:serverTimestamp(),
-        updatedBy:signedInUser.uid
+        bookings:Array.isArray(event.detail)?event.detail:[],
+        updatedAt:serverTimestamp(),updatedBy:signedInUser.uid
       },{merge:true});
       window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"gigs"}}));
     }catch(error){
@@ -2771,6 +2847,54 @@
       window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:false,type:"gigs"}}));
     }
   });
+
+  window.addEventListener("crew-gig-response-save",async event=>{
+    if(!signedInUser || isAdmin()) return;
+    const {gigId,status,note}=event.detail || {};
+    if(!gigId || !["available","maybe","unavailable"].includes(status)) return;
+    try{
+      const responseId=`${gigId}_${signedInUser.uid}`;
+      await setDoc(doc(db,"gigResponses",responseId),{
+        gigId,userId:signedInUser.uid,
+        displayName:signedInProfile?.displayName || signedInUser.email || "Crew member",
+        email:signedInUser.email || "",
+        status,note:String(note || "").trim(),
+        updatedAt:serverTimestamp()
+      },{merge:true});
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"response"}}));
+    }catch(error){
+      console.error("Could not save gig response",error);
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:false,type:"response"}}));
+    }
+  });
+
+  window.addEventListener("crew-cloud-refresh",async ()=>{
+    if(!signedInUser) return;
+    try{
+      const [directory,responses]=await Promise.all([loadDirectory(),loadResponses()]);
+      window.crewCloudPeopleUpdated?.({directory,responses});
+    }catch(error){
+      console.error("Could not refresh crew replies",error);
+    }
+  });
+
+  function startLiveListeners(){
+    stopGigsListener?.();
+    stopResponsesListener?.();
+
+    stopGigsListener=onSnapshot(doc(db,"sharedData","gigs"),snap=>{
+      window.crewCloudGigsUpdated?.(snap.exists()?(snap.data()?.bookings || []):[]);
+    },error=>console.warn("Gig live updates unavailable",error));
+
+    const responseRef=isAdmin()
+      ? collection(db,"gigResponses")
+      : query(collection(db,"gigResponses"),where("userId","==",signedInUser.uid));
+
+    stopResponsesListener=onSnapshot(responseRef,snap=>{
+      const responses=snap.docs.map(d=>({id:d.id,...d.data()}));
+      window.crewCloudResponsesUpdated?.(responses);
+    },error=>console.warn("Response live updates unavailable",error));
+  }
 
   try{
     await setPersistence(auth,browserLocalPersistence);
@@ -2819,16 +2943,13 @@
 
   signOutButton.addEventListener("click",async ()=>{
     signOutButton.disabled=true;
-    try{
-      await signOut(auth);
-    }catch(error){
-      alert("Sign out didn't work. Please try again.");
-    }finally{
-      signOutButton.disabled=false;
-    }
+    try{await signOut(auth)}
+    catch(error){alert("Sign out didn't work. Please try again.")}
+    finally{signOutButton.disabled=false}
   });
 
   onAuthStateChanged(auth,async user=>{
+    stopGigsListener?.(); stopResponsesListener?.();
     document.body.classList.remove("auth-pending","profile-required");
     signedInUser=user || null;
     signedInProfile=null;
@@ -2853,7 +2974,7 @@
     authStatus.textContent="Loading your Crew Girls data…";
 
     try{
-      const [profileSnap,personalSnap,gigsSnap] = await Promise.all([
+      const [profileSnap,personalSnap,gigsSnap]=await Promise.all([
         getDoc(doc(db,"users",user.uid)),
         getDoc(doc(db,"memberData",user.uid)),
         getDoc(doc(db,"sharedData","gigs"))
@@ -2863,22 +2984,21 @@
       signedInRole=signedInProfile?.role || "member";
       const personalData=personalSnap.exists()?personalSnap.data()?.data:null;
       const sharedBookings=gigsSnap.exists()?(gigsSnap.data()?.bookings || []):[];
+      const [directory,responses]=await Promise.all([loadDirectory(),loadResponses()]);
 
       await waitForCrewApp();
       window.crewLoadSignedInUser?.({
-        uid:user.uid,
-        email:user.email || "",
-        role:signedInRole,
+        uid:user.uid,email:user.email || "",role:signedInRole,
         profile:signedInProfile ? {
           name:signedInProfile.displayName || "",
           goal:signedInProfile.goal || "",
           colour:signedInProfile.colour || "#ff007f",
           running:Boolean(signedInProfile.running)
-        } : null,
-        personalData,
-        sharedBookings
+        }:null,
+        personalData,sharedBookings,directory,responses
       });
 
+      startLiveListeners();
       authStatus.textContent="";
     }catch(error){
       console.error("Could not load Crew Girls cloud data",error);
@@ -2929,6 +3049,9 @@ let data = loadData();
 let activeFirebaseUser = null;
 let currentUserRole = "member";
 let cloudReady = false;
+let crewDirectory = [];
+let gigResponses = [];
+
 
 function isAdminUser(){
   return currentUserRole === "admin" || currentUserRole === "owner";
@@ -2941,11 +3064,20 @@ function applyRoleUI(){
     el.classList.toggle("hidden-by-role",!admin);
   });
   document.body.dataset.userRole=currentUserRole;
+
+  document.querySelectorAll(".nav-btn").forEach(btn=>btn.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(page=>page.classList.remove("active"));
+
+  const targetPage=admin?"adminPage":"homePage";
+  document.getElementById(targetPage)?.classList.add("active");
+  document.querySelector(`[data-page="${targetPage}"]`)?.classList.add("active");
 }
 
-window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,sharedBookings}){
+window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,sharedBookings,directory,responses}){
   activeFirebaseUser={uid,email};
   currentUserRole=role || "member";
+  crewDirectory=Array.isArray(directory)?directory:[];
+  gigResponses=Array.isArray(responses)?responses:[];
   cloudReady=false;
 
   const accountKey=`crewGirlsHubDataV1:${uid}`;
@@ -2984,6 +3116,7 @@ window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,shar
   document.getElementById("app").classList.add("hidden");
   init();
   applyRoleUI();
+  renderAdminDashboard();
   cloudReady=true;
 
   if(!personalData && data.profile){
@@ -2996,6 +3129,30 @@ window.addEventListener("crew-cloud-save-result",event=>{
     console.warn("Cloud save failed:",event.detail?.type);
   }
 });
+
+
+window.crewCloudGigsUpdated=function(bookings){
+  data.bookings=Array.isArray(bookings)?bookings:[];
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  renderAll();
+};
+
+window.crewCloudResponsesUpdated=function(responses){
+  gigResponses=Array.isArray(responses)?responses:[];
+  renderBookings();
+  renderAdminDashboard();
+};
+
+window.crewCloudPeopleUpdated=function(payload){
+  crewDirectory=Array.isArray(payload?.directory)?payload.directory:crewDirectory;
+  gigResponses=Array.isArray(payload?.responses)?payload.responses:gigResponses;
+  renderAdminDashboard();
+};
+
+window.crewSaveGigResponse=function(gigId,status,note){
+  if(isAdminUser()) return;
+  window.dispatchEvent(new CustomEvent("crew-gig-response-save",{detail:{gigId,status,note}}));
+};
 
 window.dispatchEvent(new Event("crew-app-ready"));
 
@@ -3224,6 +3381,15 @@ if(openVideosQuick){
     document.getElementById("videosPage")?.classList.add("active");
     document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
     window.scrollTo({top:0,behavior:"smooth"});
+  });
+}
+
+const adminRefreshBtn=document.getElementById("adminRefreshBtn");
+if(adminRefreshBtn){
+  adminRefreshBtn.addEventListener("click",()=>{
+    adminRefreshBtn.disabled=true;
+    window.dispatchEvent(new Event("crew-cloud-refresh"));
+    setTimeout(()=>{adminRefreshBtn.disabled=false},900);
   });
 }
 
@@ -3511,6 +3677,7 @@ function renderAll(){
   renderTraining();
   renderRuns();
   renderBookings();
+  renderAdminDashboard();
   renderBackup();
   renderMonthlyHistory();
   applyRoleUI();
@@ -3615,21 +3782,123 @@ function renderRuns(){
     </div>`).join("");
 }
 
+function responseForGig(gigId,userId=activeFirebaseUser?.uid){
+  return gigResponses.find(r=>r.gigId===gigId && r.userId===userId) || null;
+}
+function responseLabel(status){
+  return status==="available"?"Available":status==="maybe"?"Maybe":status==="unavailable"?"Not available":"Not replied";
+}
 function bookingHTML(b){
+  const mine=responseForGig(b.id);
+  const availability=!isAdminUser()?`
+    <div class="availability-box">
+      <h5>Your availability${mine?` · <span class="response-chip ${esc(mine.status)}">${responseLabel(mine.status)}</span>`:""}</h5>
+      <div class="availability-controls">
+        <select id="responseStatus_${b.id}">
+          <option value="">Choose a reply…</option>
+          <option value="available" ${mine?.status==="available"?"selected":""}>Available</option>
+          <option value="maybe" ${mine?.status==="maybe"?"selected":""}>Maybe / need to check</option>
+          <option value="unavailable" ${mine?.status==="unavailable"?"selected":""}>Not available</option>
+        </select>
+        <input id="responseNote_${b.id}" maxlength="180" value="${esc(mine?.note||"")}" placeholder="Optional note for the admins">
+        <button class="primary" type="button" onclick="saveGigResponse('${b.id}')">Send reply</button>
+      </div>
+      <div class="sync-note">Your reply is saved to this gig and appears on the admin dashboard.</div>
+    </div>`:"";
+
   return `<div class="item">
     <div class="item-head"><div><h4>${esc(b.name)}</h4><div class="item-meta">${formatDate(b.date)}${b.meet?`<br>Meet: ${esc(b.meet)}`:""}${b.leave?` · Leave: ${esc(b.leave)}`:""}${b.time?`<br>Perform: ${esc(b.time)}`:""}${b.location?`<br>${esc(b.location)}`:""}</div></div></div>
     ${b.outfit?`<p><strong>Outfit:</strong> ${esc(b.outfit)}</p>`:""}
     ${b.routines?`<p><strong>Routines:</strong> ${esc(b.routines)}</p>`:""}
     ${b.notes?`<p>${esc(b.notes)}</p>`:""}
+    ${availability}
     ${isAdminUser()?`<div class="item-actions"><button class="tiny-btn" onclick="editBooking('${b.id}')">Edit</button><button class="tiny-btn danger" onclick="deleteItem('bookings','${b.id}')">Delete</button></div>`:""}
   </div>`;
 }
+window.saveGigResponse=function(gigId){
+  if(isAdminUser()) return;
+  const status=document.getElementById(`responseStatus_${gigId}`)?.value;
+  const note=document.getElementById(`responseNote_${gigId}`)?.value || "";
+  if(!status){
+    alert("Choose Available, Maybe or Not available first.");
+    return;
+  }
+  const existing=responseForGig(gigId);
+  const localResponse={
+    ...(existing||{}),id:`${gigId}_${activeFirebaseUser?.uid}`,
+    gigId,userId:activeFirebaseUser?.uid,
+    displayName:data.profile?.name || "Crew member",status,note
+  };
+  gigResponses=gigResponses.filter(r=>!(r.gigId===gigId && r.userId===activeFirebaseUser?.uid));
+  gigResponses.push(localResponse);
+  renderBookings();
+  window.crewSaveGigResponse?.(gigId,status,note);
+  alert("Reply sent to the admins.");
+};
 function renderBookings(){
   const now=new Date();
   const upcoming=[...data.bookings].filter(b=>dateObj(b.date,b.meet||b.time||"23:59")>=now).sort((a,b)=>dateObj(a.date,a.meet||a.time)-dateObj(b.date,b.meet||b.time));
   const past=[...data.bookings].filter(b=>dateObj(b.date,b.meet||b.time||"23:59")<now).sort((a,b)=>dateObj(b.date,b.meet||b.time)-dateObj(a.date,a.meet||a.time));
   document.getElementById("upcomingBookings").innerHTML=upcoming.length?upcoming.map(bookingHTML).join(""):empty("📍","No upcoming gigs.");
   document.getElementById("pastBookings").innerHTML=past.length?past.map(bookingHTML).join(""):empty("✓","No previous gigs yet.");
+}
+function renderAdminDashboard(){
+  if(!isAdminUser()) return;
+  const el=document.getElementById("adminGigList");
+  if(!el) return;
+
+  const now=new Date();
+  const upcoming=[...data.bookings]
+    .filter(b=>dateObj(b.date,b.meet||b.time||"23:59")>=now)
+    .sort((a,b)=>dateObj(a.date,a.meet||a.time)-dateObj(b.date,b.meet||b.time));
+
+  const members=crewDirectory.filter(u=>!["admin","owner"].includes(u.role || "member"));
+  const upcomingResponses=gigResponses.filter(r=>upcoming.some(g=>g.id===r.gigId));
+
+  document.getElementById("adminWelcome").textContent=`Hi ${data.profile?.name || "Admin"} — crew control centre`;
+  document.getElementById("adminUpcomingCount").textContent=upcoming.length;
+  document.getElementById("adminReplyCount").textContent=upcomingResponses.length;
+  const expected=upcoming.length*members.length;
+  document.getElementById("adminPendingCount").textContent=Math.max(0,expected-upcomingResponses.length);
+
+  if(!upcoming.length){
+    el.innerHTML=`<div class="admin-empty">No upcoming gigs yet. Tap Add a gig to create the first one.</div>`;
+    return;
+  }
+
+  el.innerHTML=upcoming.map(gig=>{
+    const responses=gigResponses.filter(r=>r.gigId===gig.id);
+    const counts={
+      available:responses.filter(r=>r.status==="available").length,
+      maybe:responses.filter(r=>r.status==="maybe").length,
+      unavailable:responses.filter(r=>r.status==="unavailable").length
+    };
+    const rows=members.map(member=>{
+      const reply=responses.find(r=>r.userId===member.id);
+      return `<div class="response-row">
+        <div><strong>${esc(member.displayName || member.email || "Crew member")}</strong>${reply?.note?`<small>${esc(reply.note)}</small>`:""}</div>
+        <span class="response-chip ${reply?.status || "pending"}">${responseLabel(reply?.status)}</span>
+      </div>`;
+    }).join("");
+
+    return `<div class="item">
+      <div class="item-head">
+        <div><h4>${esc(gig.name)}</h4><div class="item-meta">${formatDate(gig.date)}${gig.meet?` · Meet ${esc(gig.meet)}`:""}${gig.location?`<br>${esc(gig.location)}`:""}</div></div>
+        <span class="pill">${timeUntil(gig.date)}</span>
+      </div>
+      <div class="response-summary">
+        <span class="response-chip available">✓ ${counts.available} available</span>
+        <span class="response-chip maybe">? ${counts.maybe} maybe</span>
+        <span class="response-chip unavailable">× ${counts.unavailable} unavailable</span>
+        <span class="response-chip pending">… ${Math.max(0,members.length-responses.length)} waiting</span>
+      </div>
+      <div class="response-list">${rows || `<div class="sync-note">No crew member accounts found yet.</div>`}</div>
+      <div class="item-actions">
+        <button class="tiny-btn" onclick="editBooking('${gig.id}')">Edit gig</button>
+        <button class="tiny-btn danger" onclick="deleteItem('bookings','${gig.id}')">Delete gig</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 
 function renderBackup(){
