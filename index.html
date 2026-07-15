@@ -1731,7 +1731,7 @@
   }
 
 
-  /* Firebase login gate — v7.2 */
+  /* Firebase login gate — v7.3 */
   body.auth-pending #setupScreen,
   body.auth-pending #app,
   body.auth-required #setupScreen,
@@ -1805,7 +1805,7 @@
   }
 
 
-  /* Firebase member profile gate — v7.2 */
+  /* Firebase member profile gate — v7.3 */
   body.profile-required #authScreen,
   body.profile-required #setupScreen,
   body.profile-required #app{display:none!important}
@@ -1829,7 +1829,7 @@
   }
 
 
-  /* Firebase cloud data + role controls — v7.2 */
+  /* Firebase cloud data + role controls — v7.3 */
   .admin-only.hidden-by-role{display:none!important}
   .role-badge{
     display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
@@ -1838,7 +1838,7 @@
   }
 
 
-  /* v7.2 role dashboards and gig availability */
+  /* v7.3 role dashboards and gig availability */
   .admin-dashboard{display:none}
   body[data-user-role="admin"] .admin-dashboard,
   body[data-user-role="owner"] .admin-dashboard{display:block}
@@ -1886,7 +1886,7 @@
   }
 
 
-  /* v7.2 crew tasks */
+  /* v7.3 crew tasks */
   .task-hero{padding:22px;border-radius:26px;margin-bottom:16px;background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,.025)),var(--panel);border:1px solid rgba(255,255,255,.08)}
   .task-hero h2{margin:0 0 6px;font-size:1.5rem}
   .task-hero p{margin:0;color:var(--muted);line-height:1.5}
@@ -1907,7 +1907,7 @@
   .home-task-banner small{display:block;color:var(--muted);margin-top:3px}
 
 
-  /* v7.2 admin reply inbox */
+  /* v7.3 admin reply inbox */
   .admin-reply-alert{
     margin:0 0 16px;
     padding:14px 15px;
@@ -1976,13 +1976,50 @@
     line-height:1;
   }
 
+
+  /* v7.3 login password visibility toggle */
+  .password-field-wrap{
+    position:relative;
+  }
+  .password-field-wrap input{
+    padding-right:52px;
+  }
+  .password-toggle{
+    position:absolute;
+    top:50%;
+    right:8px;
+    transform:translateY(-50%);
+    width:38px;
+    height:38px;
+    border:0;
+    border-radius:11px;
+    display:grid;
+    place-items:center;
+    background:transparent;
+    color:var(--muted);
+    font-size:1.05rem;
+    line-height:1;
+  }
+  .password-toggle:hover,
+  .password-toggle:focus-visible{
+    color:var(--text);
+    background:rgba(255,255,255,.06);
+    outline:none;
+  }
+
 </style>
 </head>
-<body class="auth-pending">
-
-<section id="authScreen" class="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo"><img src="favicon.png" alt="Crew Girls Hub logo"></div>
+<body class="<div class="password-field-wrap">
+          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Your password">
+          <button
+            id="toggleLoginPassword"
+            class="password-toggle"
+            type="button"
+            aria-label="Show password"
+            aria-pressed="false"
+            title="Show password"
+          >👁</button>
+        </div>go"><img src="favicon.png" alt="Crew Girls Hub logo"></div>
     <h1>Crew Girls Hub</h1>
     <p class="auth-subtitle">Sign in with your Crew Girls account to open the hub.</p>
     <form id="loginForm" class="auth-form">
@@ -2684,7 +2721,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v7.2</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v7.3</strong><br>
         Video Library
       </div>
 
@@ -2865,6 +2902,19 @@
   const loginForm = document.getElementById("loginForm");
   const loginEmail = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
+  const toggleLoginPassword = document.getElementById("toggleLoginPassword");
+
+  toggleLoginPassword?.addEventListener("click",()=>{
+    const revealing=loginPassword.type==="password";
+    loginPassword.type=revealing?"text":"password";
+    toggleLoginPassword.textContent=revealing?"🙈":"👁";
+    toggleLoginPassword.setAttribute("aria-label",revealing?"Hide password":"Show password");
+    toggleLoginPassword.setAttribute("title",revealing?"Hide password":"Show password");
+    toggleLoginPassword.setAttribute("aria-pressed",String(revealing));
+    loginPassword.focus({preventScroll:true});
+    const end=loginPassword.value.length;
+    try{loginPassword.setSelectionRange(end,end)}catch(error){}
+  });
   const loginButton = document.getElementById("loginButton");
   const loginError = document.getElementById("loginError");
   const authStatus = document.getElementById("authStatus");
@@ -3031,6 +3081,13 @@
     try{
       await signInWithEmailAndPassword(auth,loginEmail.value.trim(),loginPassword.value);
       loginPassword.value="";
+      loginPassword.type="password";
+      if(toggleLoginPassword){
+        toggleLoginPassword.textContent="👁";
+        toggleLoginPassword.setAttribute("aria-label","Show password");
+        toggleLoginPassword.setAttribute("title","Show password");
+        toggleLoginPassword.setAttribute("aria-pressed","false");
+      }
     }catch(error){
       showAuthError(friendlyAuthError(error));
       authStatus.textContent="";
