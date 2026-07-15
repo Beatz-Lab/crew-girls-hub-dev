@@ -1978,48 +1978,26 @@
 
 
   /* v7.3 login password visibility toggle */
-  .password-field-wrap{
-    position:relative;
-  }
-  .password-field-wrap input{
-    padding-right:52px;
-  }
+  .password-field-wrap{position:relative}
+  .password-field-wrap input{padding-right:52px}
   .password-toggle{
-    position:absolute;
-    top:50%;
-    right:8px;
-    transform:translateY(-50%);
-    width:38px;
-    height:38px;
-    border:0;
-    border-radius:11px;
-    display:grid;
-    place-items:center;
-    background:transparent;
-    color:var(--muted);
-    font-size:1.05rem;
-    line-height:1;
+    position:absolute;top:50%;right:8px;transform:translateY(-50%);
+    width:38px;height:38px;border:0;border-radius:11px;
+    display:grid;place-items:center;background:transparent;
+    color:var(--muted);font-size:1.05rem;line-height:1
   }
   .password-toggle:hover,
   .password-toggle:focus-visible{
-    color:var(--text);
-    background:rgba(255,255,255,.06);
-    outline:none;
+    color:var(--text);background:rgba(255,255,255,.06);outline:none
   }
 
 </style>
 </head>
-<body class="<div class="password-field-wrap">
-          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Your password">
-          <button
-            id="toggleLoginPassword"
-            class="password-toggle"
-            type="button"
-            aria-label="Show password"
-            aria-pressed="false"
-            title="Show password"
-          >👁</button>
-        </div>go"><img src="favicon.png" alt="Crew Girls Hub logo"></div>
+<body class="auth-pending">
+
+<section id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"><img src="favicon.png" alt="Crew Girls Hub logo"></div>
     <h1>Crew Girls Hub</h1>
     <p class="auth-subtitle">Sign in with your Crew Girls account to open the hub.</p>
     <form id="loginForm" class="auth-form">
@@ -2029,7 +2007,11 @@
       </div>
       <div class="field">
         <label for="loginPassword">Password</label>
-        <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Your password">
+        <div class="password-field-wrap">
+          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Your password">
+          <button id="toggleLoginPassword" class="password-toggle" type="button"
+            aria-label="Show password" aria-pressed="false" title="Show password">👁</button>
+        </div>
       </div>
       <div id="loginError" class="auth-error" role="alert"></div>
       <button id="loginButton" class="primary full" type="submit">Sign in</button>
