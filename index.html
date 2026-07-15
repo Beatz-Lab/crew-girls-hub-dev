@@ -1731,7 +1731,7 @@
   }
 
 
-  /* Firebase login gate — v6.11 */
+  /* Firebase login gate — v6.12 */
   body.auth-pending #setupScreen,
   body.auth-pending #app,
   body.auth-required #setupScreen,
@@ -1805,7 +1805,7 @@
   }
 
 
-  /* Firebase member profile gate — v6.11 */
+  /* Firebase member profile gate — v6.12 */
   body.profile-required #authScreen,
   body.profile-required #setupScreen,
   body.profile-required #app{display:none!important}
@@ -1826,6 +1826,15 @@
   .member-profile-form{display:grid;gap:13px}
   .member-profile-note{
     color:var(--muted);font-size:.8rem;line-height:1.45;text-align:center
+  }
+
+
+  /* Firebase cloud data + role controls — v6.12 */
+  .admin-only.hidden-by-role{display:none!important}
+  .role-badge{
+    display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
+    background:var(--accent-soft);color:var(--accent);font-size:.68rem;font-weight:800;
+    margin-left:6px;vertical-align:middle
   }
 
 </style>
@@ -2491,7 +2500,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v6.11</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v6.12</strong><br>
         Video Library
       </div>
 
@@ -2678,17 +2687,18 @@
 
   let signedInUser = null;
   let signedInProfile = null;
+  let signedInRole = "member";
+
+  const isAdmin = () => signedInRole === "admin" || signedInRole === "owner";
 
   function showAuthError(message){
     loginError.textContent = message;
     loginError.classList.add("show");
   }
-
   function clearAuthError(){
     loginError.textContent = "";
     loginError.classList.remove("show");
   }
-
   function friendlyAuthError(error){
     const code = error?.code || "";
     if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(code)){
@@ -2700,108 +2710,129 @@
     if(code === "auth/unauthorized-domain") return "This website address still needs approving in Firebase.";
     return "Sign-in didn't work just yet. Please try again.";
   }
-
   function waitForCrewApp(){
     if(typeof window.crewLoadSignedInUser === "function") return Promise.resolve();
     return new Promise(resolve=>{
       window.addEventListener("crew-app-ready", resolve, {once:true});
-      setTimeout(resolve, 2500);
+      setTimeout(resolve,2500);
     });
   }
 
-  async function saveFirebaseProfile(profile){
-    if(!signedInUser || !profile) return;
+  async function saveProfileAndPersonalData(payload){
+    if(!signedInUser || !payload) return;
+    const personalData = {...payload};
+    delete personalData.bookings;
 
-    const payload = {
-      displayName: String(profile.name || "").trim(),
-      goal: String(profile.goal || "").trim(),
-      colour: profile.colour || "#ff007f",
-      running: Boolean(profile.running),
-      email: signedInUser.email || "",
-      role: signedInProfile?.role || "member",
-      updatedAt: serverTimestamp()
+    const profile = personalData.profile || {};
+    await Promise.all([
+      setDoc(doc(db,"memberData",signedInUser.uid),{
+        data:personalData,
+        updatedAt:serverTimestamp()
+      },{merge:true}),
+      setDoc(doc(db,"users",signedInUser.uid),{
+        displayName:String(profile.name || "").trim(),
+        goal:String(profile.goal || "").trim(),
+        colour:profile.colour || "#ff007f",
+        running:Boolean(profile.running),
+        email:signedInUser.email || "",
+        role:signedInRole,
+        updatedAt:serverTimestamp()
+      },{merge:true})
+    ]);
+    signedInProfile = {...signedInProfile,
+      displayName:profile.name || "",
+      goal:profile.goal || "",
+      colour:profile.colour || "#ff007f",
+      running:Boolean(profile.running)
     };
-
-    if(!signedInProfile) payload.createdAt = serverTimestamp();
-
-    await setDoc(doc(db, "users", signedInUser.uid), payload, {merge:true});
-    signedInProfile = {...signedInProfile, ...payload};
   }
 
-  window.addEventListener("crew-profile-save", async event=>{
+  window.addEventListener("crew-personal-save", async event=>{
     try{
-      await saveFirebaseProfile(event.detail);
-      window.dispatchEvent(new CustomEvent("crew-profile-save-result",{detail:{ok:true}}));
+      await saveProfileAndPersonalData(event.detail);
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"personal"}}));
     }catch(error){
-      console.error("Could not save Firebase profile", error);
-      window.dispatchEvent(new CustomEvent("crew-profile-save-result",{detail:{ok:false}}));
+      console.error("Could not save personal cloud data",error);
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:false,type:"personal"}}));
+    }
+  });
+
+  window.addEventListener("crew-shared-gigs-save", async event=>{
+    if(!signedInUser || !isAdmin()) return;
+    try{
+      await setDoc(doc(db,"sharedData","gigs"),{
+        bookings:Array.isArray(event.detail) ? event.detail : [],
+        updatedAt:serverTimestamp(),
+        updatedBy:signedInUser.uid
+      },{merge:true});
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"gigs"}}));
+    }catch(error){
+      console.error("Could not save shared gigs",error);
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:false,type:"gigs"}}));
     }
   });
 
   try{
-    await setPersistence(auth, browserLocalPersistence);
+    await setPersistence(auth,browserLocalPersistence);
   }catch(error){
-    console.warn("Could not set Firebase sign-in persistence", error);
+    console.warn("Could not set Firebase sign-in persistence",error);
   }
 
-  loginForm.addEventListener("submit", async event=>{
+  loginForm.addEventListener("submit",async event=>{
     event.preventDefault();
     clearAuthError();
-    loginButton.disabled = true;
-    loginButton.textContent = "Signing in…";
-    authStatus.textContent = "Checking your details…";
-
+    loginButton.disabled=true;
+    loginButton.textContent="Signing in…";
+    authStatus.textContent="Checking your details…";
     try{
-      await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
-      loginPassword.value = "";
+      await signInWithEmailAndPassword(auth,loginEmail.value.trim(),loginPassword.value);
+      loginPassword.value="";
     }catch(error){
       showAuthError(friendlyAuthError(error));
-      authStatus.textContent = "";
+      authStatus.textContent="";
     }finally{
-      loginButton.disabled = false;
-      loginButton.textContent = "Sign in";
+      loginButton.disabled=false;
+      loginButton.textContent="Sign in";
     }
   });
 
-  forgotPasswordButton.addEventListener("click", async ()=>{
+  forgotPasswordButton.addEventListener("click",async ()=>{
     clearAuthError();
-    const email = loginEmail.value.trim();
-
+    const email=loginEmail.value.trim();
     if(!email){
       showAuthError("Enter your email address first, then tap Forgot password.");
       loginEmail.focus();
       return;
     }
-
-    forgotPasswordButton.disabled = true;
-    authStatus.textContent = "Sending password reset email…";
-
+    forgotPasswordButton.disabled=true;
+    authStatus.textContent="Sending password reset email…";
     try{
-      await sendPasswordResetEmail(auth, email);
-      authStatus.textContent = "Password reset email sent. Check your inbox and junk folder.";
+      await sendPasswordResetEmail(auth,email);
+      authStatus.textContent="Password reset email sent. Check your inbox and junk folder.";
     }catch(error){
       showAuthError(friendlyAuthError(error));
-      authStatus.textContent = "";
+      authStatus.textContent="";
     }finally{
-      forgotPasswordButton.disabled = false;
+      forgotPasswordButton.disabled=false;
     }
   });
 
-  signOutButton.addEventListener("click", async ()=>{
-    signOutButton.disabled = true;
+  signOutButton.addEventListener("click",async ()=>{
+    signOutButton.disabled=true;
     try{
       await signOut(auth);
     }catch(error){
       alert("Sign out didn't work. Please try again.");
     }finally{
-      signOutButton.disabled = false;
+      signOutButton.disabled=false;
     }
   });
 
-  onAuthStateChanged(auth, async user=>{
+  onAuthStateChanged(auth,async user=>{
     document.body.classList.remove("auth-pending","profile-required");
-    signedInUser = user || null;
-    signedInProfile = null;
+    signedInUser=user || null;
+    signedInProfile=null;
+    signedInRole="member";
 
     if(!user){
       document.body.classList.add("auth-required");
@@ -2810,7 +2841,7 @@
       signOutButton.classList.add("hidden");
       document.getElementById("setupScreen")?.classList.add("hidden");
       document.getElementById("app")?.classList.add("hidden");
-      authStatus.textContent = "";
+      authStatus.textContent="";
       setTimeout(()=>loginEmail.focus(),50);
       return;
     }
@@ -2819,30 +2850,40 @@
     authScreen.classList.add("hidden");
     memberProfileScreen?.classList.add("hidden");
     signOutButton.classList.remove("hidden");
-    authStatus.textContent = "Loading your Crew Girls profile…";
+    authStatus.textContent="Loading your Crew Girls data…";
 
     try{
-      const snapshot = await getDoc(doc(db,"users",user.uid));
-      signedInProfile = snapshot.exists() ? snapshot.data() : null;
+      const [profileSnap,personalSnap,gigsSnap] = await Promise.all([
+        getDoc(doc(db,"users",user.uid)),
+        getDoc(doc(db,"memberData",user.uid)),
+        getDoc(doc(db,"sharedData","gigs"))
+      ]);
+
+      signedInProfile=profileSnap.exists()?profileSnap.data():null;
+      signedInRole=signedInProfile?.role || "member";
+      const personalData=personalSnap.exists()?personalSnap.data()?.data:null;
+      const sharedBookings=gigsSnap.exists()?(gigsSnap.data()?.bookings || []):[];
 
       await waitForCrewApp();
-
       window.crewLoadSignedInUser?.({
         uid:user.uid,
         email:user.email || "",
+        role:signedInRole,
         profile:signedInProfile ? {
           name:signedInProfile.displayName || "",
           goal:signedInProfile.goal || "",
           colour:signedInProfile.colour || "#ff007f",
           running:Boolean(signedInProfile.running)
-        } : null
+        } : null,
+        personalData,
+        sharedBookings
       });
 
-      authStatus.textContent = "";
+      authStatus.textContent="";
     }catch(error){
-      console.error("Could not load member profile", error);
-      authStatus.textContent = "";
-      alert("We couldn't load your profile. Check your internet connection and try again.");
+      console.error("Could not load Crew Girls cloud data",error);
+      authStatus.textContent="";
+      alert("We couldn't load your cloud data. Check your internet connection and try again.");
     }
   });
 </script>
@@ -2886,52 +2927,73 @@ const blankData = () => ({
 let data = loadData();
 
 let activeFirebaseUser = null;
+let currentUserRole = "member";
+let cloudReady = false;
 
-window.crewLoadSignedInUser = function({uid,email,profile}){
-  activeFirebaseUser = {uid,email};
+function isAdminUser(){
+  return currentUserRole === "admin" || currentUserRole === "owner";
+}
 
-  const accountKey = `crewGirlsHubDataV1:${uid}`;
-  const migrationOwnerKey = "crewGirlsHubMigratedOwnerUid";
+function applyRoleUI(){
+  const admin=isAdminUser();
+  document.querySelectorAll('[data-open="bookingModal"], [data-open-inline="bookingModal"]').forEach(el=>{
+    el.classList.add("admin-only");
+    el.classList.toggle("hidden-by-role",!admin);
+  });
+  document.body.dataset.userRole=currentUserRole;
+}
 
-  if(!localStorage.getItem(accountKey) && !localStorage.getItem(migrationOwnerKey)){
-    const oldDeviceData = localStorage.getItem("crewGirlsHubDataV1");
-    if(oldDeviceData){
-      localStorage.setItem(accountKey, oldDeviceData);
-      localStorage.setItem(migrationOwnerKey, uid);
-    }
+window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,sharedBookings}){
+  activeFirebaseUser={uid,email};
+  currentUserRole=role || "member";
+  cloudReady=false;
+
+  const accountKey=`crewGirlsHubDataV1:${uid}`;
+  STORAGE_KEY=accountKey;
+  localStorage.setItem("crewGirlsActiveStorageKey",accountKey);
+
+  let localAccount=blankData();
+  try{
+    const saved=localStorage.getItem(STORAGE_KEY);
+    localAccount=saved?{...blankData(),...JSON.parse(saved)}:blankData();
+  }catch(error){
+    localAccount=blankData();
   }
 
-  STORAGE_KEY = accountKey;
-  localStorage.setItem("crewGirlsActiveStorageKey", accountKey);
-
-  try{
-    const saved = localStorage.getItem(STORAGE_KEY);
-    data = saved ? {...blankData(),...JSON.parse(saved)} : blankData();
-  }catch(error){
-    data = blankData();
+  if(personalData && typeof personalData==="object"){
+    data={...blankData(),...personalData,bookings:[]};
+  }else{
+    data={...blankData(),...localAccount,bookings:[]};
   }
 
   if(profile && profile.name){
-    data.profile = {
+    data.profile={
       name:profile.name,
       goal:profile.goal || "",
       colour:profile.colour || themes[0].id,
       running:Boolean(profile.running)
     };
-  }else{
-    data.profile = null;
+  }else if(!personalData){
+    data.profile=null;
   }
 
+  data.bookings=Array.isArray(sharedBookings)?sharedBookings:[];
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-  window.dispatchEvent(new CustomEvent("crew-profile-save",{detail:{...data.profile}}));
+
   document.getElementById("setupScreen").classList.add("hidden");
   document.getElementById("app").classList.add("hidden");
   init();
+  applyRoleUI();
+  cloudReady=true;
+
+  if(!personalData && data.profile){
+    window.dispatchEvent(new CustomEvent("crew-personal-save",{detail:{...data}}));
+  }
 };
 
-window.addEventListener("crew-profile-save-result",event=>{
+window.addEventListener("crew-cloud-save-result",event=>{
   if(!event.detail?.ok){
-    alert("Your profile saved on this device, but couldn't sync online yet.");
+    console.warn("Cloud save failed:",event.detail?.type);
   }
 });
 
@@ -2947,6 +3009,12 @@ function loadData(){
 function saveData(){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   renderAll();
+  if(cloudReady && activeFirebaseUser){
+    window.dispatchEvent(new CustomEvent("crew-personal-save",{detail:{...data,bookings:[]}}));
+    if(isAdminUser()){
+      window.dispatchEvent(new CustomEvent("crew-shared-gigs-save",{detail:[...data.bookings]}));
+    }
+  }
 }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -3079,6 +3147,9 @@ document.getElementById("setupForm").addEventListener("submit",e=>{
     running:document.getElementById("setupRunning").checked
   };
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  if(activeFirebaseUser){
+    window.dispatchEvent(new CustomEvent("crew-personal-save",{detail:{...data,bookings:[]}}));
+  }
   document.getElementById("setupScreen").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   if(document.activeElement) document.activeElement.blur();
@@ -3240,6 +3311,10 @@ document.getElementById("runForm").addEventListener("submit",e=>{
 
 document.getElementById("bookingForm").addEventListener("submit",e=>{
   e.preventDefault();
+  if(!isAdminUser()){
+    alert("Only Crew Girls admins can add or edit gigs.");
+    return;
+  }
   const id=document.getElementById("bookingId").value||uid();
   const item={
     id,name:document.getElementById("bookingName").value.trim(),date:document.getElementById("bookingDate").value,
@@ -3262,7 +3337,6 @@ document.getElementById("profileForm").addEventListener("submit",e=>{
     running:document.getElementById("profileRunning").checked
   };
   setAccent(selectedProfileColour);saveData();
-  window.dispatchEvent(new CustomEvent("crew-profile-save",{detail:{...data.profile}}));
   alert("Profile saved.");
 });
 
@@ -3407,7 +3481,7 @@ window.deleteNote=function(id){
 function renderAll(){
   if(!data.profile)return;
   setAccent(data.profile.colour||themes[0].id);
-  document.getElementById("headerGreeting").textContent=`Welcome back, ${data.profile.name}`;
+  document.getElementById("headerGreeting").textContent=`Welcome back, ${data.profile.name}${isAdminUser()?" · Admin":""}`;
   document.getElementById("welcomeName").textContent=`Hi, ${data.profile.name} 👋`;
   document.getElementById("homeGoal").textContent=data.profile.goal||"Keep moving, keep improving.";
   document.getElementById("monthTraining").textContent=data.training.filter(x=>monthMatch(x.date)).length;
@@ -3439,6 +3513,7 @@ function renderAll(){
   renderBookings();
   renderBackup();
   renderMonthlyHistory();
+  applyRoleUI();
 }
 
 function renderNextGig(){
@@ -3447,8 +3522,8 @@ function renderNextGig(){
   document.getElementById("upcomingCount").textContent=upcoming.length;
   const el=document.getElementById("nextGigCard");
   if(!upcoming.length){
-    el.innerHTML=`<span class="gig-count-badge count-badge">0</span><div class="gig-badge">Next gig</div><div class="gig-title">No upcoming gigs yet</div><div class="gig-meta">Add a booking and it will appear here automatically.</div><button class="secondary" style="margin-top:12px" data-open-inline="bookingModal">Add gig</button>`;
-    el.querySelector("[data-open-inline]").addEventListener("click",()=>document.getElementById("bookingModal").classList.add("open"));
+    el.innerHTML=`<span class="gig-count-badge count-badge">0</span><div class="gig-badge">Next gig</div><div class="gig-title">No upcoming gigs yet</div><div class="gig-meta">${isAdminUser()?"Add a gig and it will appear for everyone.":"Your admins haven’t added an upcoming gig yet."}</div>${isAdminUser()?`<button class="secondary" style="margin-top:12px" data-open-inline="bookingModal">Add gig</button>`:""}`;
+    el.querySelector("[data-open-inline]")?.addEventListener("click",()=>document.getElementById("bookingModal").classList.add("open"));
     return;
   }
   const b=upcoming[0];
@@ -3546,7 +3621,7 @@ function bookingHTML(b){
     ${b.outfit?`<p><strong>Outfit:</strong> ${esc(b.outfit)}</p>`:""}
     ${b.routines?`<p><strong>Routines:</strong> ${esc(b.routines)}</p>`:""}
     ${b.notes?`<p>${esc(b.notes)}</p>`:""}
-    <div class="item-actions"><button class="tiny-btn" onclick="editBooking('${b.id}')">Edit</button><button class="tiny-btn danger" onclick="deleteItem('bookings','${b.id}')">Delete</button></div>
+    ${isAdminUser()?`<div class="item-actions"><button class="tiny-btn" onclick="editBooking('${b.id}')">Edit</button><button class="tiny-btn danger" onclick="deleteItem('bookings','${b.id}')">Delete</button></div>`:""}
   </div>`;
 }
 function renderBookings(){
@@ -3565,6 +3640,10 @@ function renderBackup(){
 function empty(icon,text){return `<div class="empty"><div class="emoji">${icon}</div>${text}</div>`;}
 
 window.deleteItem=function(collection,id){
+  if(collection==="bookings" && !isAdminUser()){
+    alert("Only Crew Girls admins can delete gigs.");
+    return;
+  }
   if(confirm("Delete this entry?")){
     data[collection]=data[collection].filter(x=>x.id!==id);saveData();
   }
@@ -3579,6 +3658,10 @@ window.editRoutine=function(id){
   document.getElementById("routineModal").classList.add("open");
 }
 window.editBooking=function(id){
+  if(!isAdminUser()){
+    alert("Only Crew Girls admins can edit gigs.");
+    return;
+  }
   const b=data.bookings.find(x=>x.id===id);if(!b)return;
   document.getElementById("bookingId").value=b.id;
   document.getElementById("bookingName").value=b.name;
