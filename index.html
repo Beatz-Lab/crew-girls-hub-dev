@@ -1730,9 +1730,106 @@
     }
   }
 
+
+  /* Firebase login gate — v6.9 */
+  body.auth-pending #setupScreen,
+  body.auth-pending #app,
+  body.auth-required #setupScreen,
+  body.auth-required #app{
+    display:none!important;
+  }
+
+  .auth-screen{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:22px;
+    position:relative;
+    z-index:100;
+  }
+  .auth-card{
+    width:min(100%,460px);
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:28px;
+    padding:24px;
+    box-shadow:var(--shadow);
+  }
+  .auth-logo{
+    width:108px;
+    height:108px;
+    margin:0 auto 17px;
+    border-radius:26px;
+    background:#fff;
+    padding:5px;
+    box-shadow:0 0 32px var(--accent-glow);
+  }
+  .auth-logo img{width:100%;height:100%;object-fit:cover;border-radius:21px}
+  .auth-card h1{text-align:center;margin:0;font-size:1.8rem}
+  .auth-subtitle{text-align:center;color:var(--muted);margin:7px 0 22px;line-height:1.45}
+  .auth-form{display:grid;gap:13px}
+  .auth-error{
+    display:none;
+    padding:11px 12px;
+    border-radius:13px;
+    background:rgba(255,90,105,.14);
+    color:#ffb2ba;
+    font-size:.82rem;
+    line-height:1.45;
+  }
+  .auth-error.show{display:block}
+  .auth-help{
+    border:0;
+    background:transparent;
+    color:var(--accent);
+    padding:7px;
+    font-size:.82rem;
+    font-weight:800;
+  }
+  .auth-status{
+    min-height:20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:.78rem;
+  }
+  .sign-out-btn{
+    margin-left:auto;
+    flex:0 0 auto;
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:12px;
+    background:var(--panel-2);
+    color:var(--text);
+    padding:9px 11px;
+    font-size:.74rem;
+    font-weight:800;
+  }
+
 </style>
 </head>
-<body>
+<body class="auth-pending">
+
+<section id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"><img src="favicon.png" alt="Crew Girls Hub logo"></div>
+    <h1>Crew Girls Hub</h1>
+    <p class="auth-subtitle">Sign in with your Crew Girls account to open the hub.</p>
+    <form id="loginForm" class="auth-form">
+      <div class="field">
+        <label for="loginEmail">Email address</label>
+        <input id="loginEmail" type="email" autocomplete="email" required placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Your password">
+      </div>
+      <div id="loginError" class="auth-error" role="alert"></div>
+      <button id="loginButton" class="primary full" type="submit">Sign in</button>
+      <button id="forgotPasswordButton" class="auth-help" type="button">Forgot password?</button>
+      <div id="authStatus" class="auth-status">Checking your account…</div>
+    </form>
+  </div>
+</section>
+
 
 <section id="setupScreen" class="setup hidden">
   <div class="setup-card">
@@ -1779,7 +1876,8 @@
       <h1>Crew Girls Hub</h1>
       <p id="headerGreeting">Welcome back</p>
     </div>
-  </header>
+    <button id="signOutButton" class="sign-out-btn hidden" type="button">Sign out</button>
+</header>
 
   <main>
     <section id="homePage" class="page active">
@@ -2352,7 +2450,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v6.8</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v6.9</strong><br>
         Video Library
       </div>
 
@@ -2501,6 +2599,139 @@
     </form>
   </div>
 </div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import {
+    getAuth,
+    setPersistence,
+    browserLocalPersistence,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdCh0RPkFlidYS9cLA71v5HAeBJdctgQI",
+    authDomain: "crew-girls-hub.firebaseapp.com",
+    projectId: "crew-girls-hub",
+    storageBucket: "crew-girls-hub.firebasestorage.app",
+    messagingSenderId: "41680170398",
+    appId: "1:41680170398:web:4127c9fbeb8bb234627a8f"
+  };
+
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+
+  const authScreen = document.getElementById("authScreen");
+  const loginForm = document.getElementById("loginForm");
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
+  const loginButton = document.getElementById("loginButton");
+  const loginError = document.getElementById("loginError");
+  const authStatus = document.getElementById("authStatus");
+  const forgotPasswordButton = document.getElementById("forgotPasswordButton");
+  const signOutButton = document.getElementById("signOutButton");
+
+  function showAuthError(message){
+    loginError.textContent = message;
+    loginError.classList.add("show");
+  }
+
+  function clearAuthError(){
+    loginError.textContent = "";
+    loginError.classList.remove("show");
+  }
+
+  function friendlyAuthError(error){
+    const code = error?.code || "";
+    if(code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"){
+      return "That email or password doesn't match. Check both and try again.";
+    }
+    if(code === "auth/invalid-email") return "That email address doesn't look right.";
+    if(code === "auth/too-many-requests") return "Too many attempts for now. Wait a little while, then try again.";
+    if(code === "auth/network-request-failed") return "No internet connection. You need to be online to sign in.";
+    if(code === "auth/unauthorized-domain") return "This website address still needs approving in Firebase.";
+    return "Sign-in didn't work just yet. Please try again.";
+  }
+
+  try{
+    await setPersistence(auth, browserLocalPersistence);
+  }catch(error){
+    console.warn("Could not set Firebase sign-in persistence", error);
+  }
+
+  loginForm.addEventListener("submit", async (event)=>{
+    event.preventDefault();
+    clearAuthError();
+    loginButton.disabled = true;
+    loginButton.textContent = "Signing in…";
+    authStatus.textContent = "Checking your details…";
+    try{
+      await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
+      loginPassword.value = "";
+    }catch(error){
+      showAuthError(friendlyAuthError(error));
+      authStatus.textContent = "";
+    }finally{
+      loginButton.disabled = false;
+      loginButton.textContent = "Sign in";
+    }
+  });
+
+  forgotPasswordButton.addEventListener("click", async ()=>{
+    clearAuthError();
+    const email = loginEmail.value.trim();
+    if(!email){
+      showAuthError("Enter your email address first, then tap Forgot password.");
+      loginEmail.focus();
+      return;
+    }
+    forgotPasswordButton.disabled = true;
+    authStatus.textContent = "Sending password reset email…";
+    try{
+      await sendPasswordResetEmail(auth, email);
+      authStatus.textContent = "Password reset email sent. Check your inbox and junk folder.";
+    }catch(error){
+      showAuthError(friendlyAuthError(error));
+      authStatus.textContent = "";
+    }finally{
+      forgotPasswordButton.disabled = false;
+    }
+  });
+
+  signOutButton.addEventListener("click", async ()=>{
+    signOutButton.disabled = true;
+    try{
+      await signOut(auth);
+    }catch(error){
+      alert("Sign out didn't work. Please try again.");
+    }finally{
+      signOutButton.disabled = false;
+    }
+  });
+
+  onAuthStateChanged(auth, (user)=>{
+    document.body.classList.remove("auth-pending");
+    if(user){
+      document.body.classList.remove("auth-required");
+      authScreen.classList.add("hidden");
+      signOutButton.classList.remove("hidden");
+      authStatus.textContent = "";
+      if(typeof window.init === "function") window.init();
+    }else{
+      document.body.classList.add("auth-required");
+      authScreen.classList.remove("hidden");
+      signOutButton.classList.add("hidden");
+      document.getElementById("setupScreen")?.classList.add("hidden");
+      document.getElementById("app")?.classList.add("hidden");
+      authStatus.textContent = "";
+      setTimeout(()=>loginEmail.focus(),50);
+    }
+  });
+</script>
 
 <script>
 if ("scrollRestoration" in history) { history.scrollRestoration = "manual"; }
