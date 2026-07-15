@@ -1829,7 +1829,7 @@
   }
 
 
-  /* Firebase cloud data + role controls — v7.3 */
+  /* Firebase cloud data + role controls — v7.4 */
   .admin-only.hidden-by-role{display:none!important}
   .role-badge{
     display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
@@ -1838,7 +1838,7 @@
   }
 
 
-  /* v7.3 role dashboards and gig availability */
+  /* v7.3 role dashboards, gig availability and holidays */
   .admin-dashboard{display:none}
   body[data-user-role="admin"] .admin-dashboard,
   body[data-user-role="owner"] .admin-dashboard{display:block}
@@ -1989,6 +1989,90 @@
   .password-toggle:hover,
   .password-toggle:focus-visible{
     color:var(--text);background:rgba(255,255,255,.06);outline:none
+  }
+
+
+  /* v7.4 holidays, admin holiday inbox and clash calendar */
+  .holiday-page-hero{
+    padding:22px;border-radius:26px;margin-bottom:16px;
+    background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,.025)),var(--panel);
+    border:1px solid rgba(255,255,255,.08)
+  }
+  .holiday-page-hero h2{margin:0 0 6px;font-size:1.5rem}
+  .holiday-page-hero p{margin:0;color:var(--muted);line-height:1.5}
+  .holiday-form-card{margin-bottom:16px}
+  .holiday-card{
+    background:var(--panel);border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;padding:15px
+  }
+  .holiday-card + .holiday-card{margin-top:10px}
+  .holiday-card.new-item{border-color:rgba(255,90,105,.35)}
+  .holiday-card.clash-item{border-color:rgba(255,204,102,.35)}
+  .holiday-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .holiday-head h3{margin:0 0 5px;font-size:1rem}
+  .holiday-meta{color:var(--muted);font-size:.8rem;line-height:1.45}
+  .holiday-note{margin:10px 0 0;color:var(--muted);line-height:1.45}
+  .holiday-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .holiday-status{
+    display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;
+    font-size:.7rem;font-weight:900;white-space:nowrap
+  }
+  .holiday-status.sent{background:rgba(255,204,102,.13);color:#ffe09a}
+  .holiday-status.seen{background:rgba(90,211,156,.13);color:#8ce9bc}
+  .holiday-status.clash{background:rgba(255,90,105,.13);color:#ffadb5}
+  .holiday-alert{
+    margin-bottom:14px;padding:14px 15px;border-radius:17px;
+    background:rgba(255,90,105,.09);border:1px solid rgba(255,90,105,.23);
+    display:flex;align-items:center;justify-content:space-between;gap:12px
+  }
+  .holiday-alert strong{display:block}
+  .holiday-alert small{display:block;color:var(--muted);margin-top:3px;line-height:1.4}
+  .holiday-nav-badge{
+    position:absolute;top:2px;right:calc(50% - 22px);
+    min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+    display:grid;place-items:center;background:var(--danger);color:#fff;
+    font-size:.62rem;font-weight:900;line-height:1
+  }
+  .holiday-admin-toolbar{
+    display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end;margin-bottom:12px
+  }
+  .holiday-admin-toolbar .field{min-width:0}
+  .holiday-calendar{
+    display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+    gap:5px
+  }
+  .holiday-calendar-head{
+    text-align:center;color:var(--muted);font-size:.68rem;font-weight:800;padding:5px 0
+  }
+  .holiday-day{
+    min-height:64px;border-radius:12px;padding:6px;
+    background:var(--panel-2);border:1px solid rgba(255,255,255,.05);
+    overflow:hidden
+  }
+  .holiday-day.outside{opacity:.28}
+  .holiday-day.today{border-color:var(--accent)}
+  .holiday-day-number{font-size:.72rem;font-weight:900;margin-bottom:4px}
+  .holiday-day-person{
+    display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:.59rem;line-height:1.35;padding:2px 4px;border-radius:6px;
+    background:rgba(255,204,102,.13);color:#ffe09a;margin-top:3px
+  }
+  .holiday-month-title{text-align:center;font-weight:900;margin:0 0 12px}
+  .holiday-inbox-grid{display:grid;gap:10px}
+  .holiday-clash-summary{
+    display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:9px
+  }
+  body[data-user-role="member"] .admin-holiday-view{display:none!important}
+  body[data-user-role="admin"] .member-holiday-view,
+  body[data-user-role="owner"] .member-holiday-view{display:none!important}
+  body[data-user-role="admin"] .bottom-nav,
+  body[data-user-role="owner"] .bottom-nav{grid-template-columns:repeat(4,1fr)}
+  body[data-user-role="member"] .bottom-nav{grid-template-columns:repeat(8,1fr)}
+  @media(max-width:560px){
+    .holiday-admin-toolbar{grid-template-columns:1fr 1fr}
+    .holiday-admin-toolbar .field{grid-column:1/-1}
+    .holiday-day{min-height:56px;padding:4px}
+    .holiday-day-person{font-size:.54rem}
   }
 
 </style>
@@ -2645,6 +2729,81 @@
       <div id="completedTaskList"></div>
     </section>
 
+    <section id="holidaysPage" class="page">
+      <div class="holiday-page-hero member-holiday-view">
+        <div class="eyebrow">☀ Time away</div>
+        <h2>My holidays</h2>
+        <p>Add the dates you will be away. Only you and the admins can see them.</p>
+      </div>
+
+      <div class="holiday-page-hero admin-holiday-view">
+        <div class="eyebrow">☀ Crew availability</div>
+        <h2>Holiday centre</h2>
+        <p>See new holiday dates, mark them as seen, and spot gigs that overlap with someone being away.</p>
+      </div>
+
+      <div class="member-holiday-view">
+        <div class="card holiday-form-card">
+          <form id="holidayForm" class="form-grid">
+            <input type="hidden" id="holidayId">
+            <div class="field">
+              <label for="holidayStart">Away from</label>
+              <input id="holidayStart" type="date" required>
+            </div>
+            <div class="field">
+              <label for="holidayEnd">Back after</label>
+              <input id="holidayEnd" type="date" required>
+            </div>
+            <div class="field full-span">
+              <label for="holidayNote">Optional note</label>
+              <input id="holidayNote" maxlength="180" placeholder="e.g. Family holiday">
+            </div>
+            <div class="field full-span">
+              <button id="holidaySaveButton" class="primary full" type="submit">Add holiday dates</button>
+            </div>
+          </form>
+        </div>
+        <div class="section-title"><h2>Upcoming holidays</h2><small id="memberHolidayCount">0 added</small></div>
+        <div id="memberHolidayList"></div>
+      </div>
+
+      <div class="admin-holiday-view">
+        <div id="holidayAdminAlert" class="holiday-alert hidden">
+          <div>
+            <strong id="holidayAdminAlertTitle">New holiday updates</strong>
+            <small id="holidayAdminAlertCopy">Open the highlighted entries below.</small>
+          </div>
+          <button class="primary" type="button" onclick="scrollToHolidayInbox()">Review</button>
+        </div>
+
+        <div id="holidayInboxAnchor" class="section-title">
+          <h2>Holiday inbox</h2>
+          <small id="holidayInboxCount">0 new</small>
+        </div>
+        <div id="adminHolidayInbox" class="holiday-inbox-grid"></div>
+
+        <div class="section-title"><h2>Gig clashes</h2><small id="holidayClashCount">0 unseen</small></div>
+        <div id="adminHolidayClashes" class="holiday-inbox-grid"></div>
+
+        <div class="section-title"><h2>Holiday calendar</h2><small>Admin only</small></div>
+        <div class="card">
+          <div class="holiday-admin-toolbar">
+            <div class="field">
+              <label for="holidayMemberFilter">Show dancer</label>
+              <select id="holidayMemberFilter"><option value="">Everyone</option></select>
+            </div>
+            <button id="holidayPrevMonth" class="secondary" type="button">‹ Previous</button>
+            <button id="holidayNextMonth" class="secondary" type="button">Next ›</button>
+          </div>
+          <div id="holidayMonthTitle" class="holiday-month-title"></div>
+          <div id="holidayCalendar" class="holiday-calendar"></div>
+        </div>
+
+        <div class="section-title"><h2>All upcoming dates</h2><small id="allHolidayCount">0 entries</small></div>
+        <div id="adminHolidayList"></div>
+      </div>
+    </section>
+
     <section id="bookingsPage" class="page">
       <div class="section-title"><h2>Upcoming gigs</h2><button class="primary" data-open="bookingModal">+ Add</button></div>
       <div class="list" id="upcomingBookings"></div>
@@ -2703,7 +2862,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v7.3</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v7.4</strong><br>
         Video Library
       </div>
 
@@ -2717,6 +2876,7 @@
     <button class="nav-btn crew-nav" data-page="routinesPage"><span>♫</span>Routines</button>
     <button class="nav-btn crew-nav" data-page="trainingPage"><span>✦</span>Training</button>
     <button class="nav-btn crew-nav" data-page="stretchesPage"><span>☽</span>Stretches</button>
+    <button class="nav-btn" data-page="holidaysPage"><span>☀</span>Holidays<i id="holidayNavBadge" class="holiday-nav-badge hidden">0</i></button>
     <button class="nav-btn" data-page="bookingsPage"><span>◆</span>Gigs</button>
     <button class="nav-btn" data-page="profilePage"><span>●</span>Profile</button>
   </nav>
@@ -2909,6 +3069,7 @@
   let signedInRole = "member";
   let stopGigsListener = null;
   let stopResponsesListener = null;
+  let stopHolidaysListener = null;
 
   const isAdmin = () => signedInRole === "admin" || signedInRole === "owner";
 
@@ -2946,6 +3107,13 @@
   async function loadResponses(){
     const ref = collection(db,"gigResponses");
     const snapshot = isAdmin()
+      ? await getDocs(ref)
+      : await getDocs(query(ref,where("userId","==",signedInUser.uid)));
+    return snapshot.docs.map(d=>({id:d.id,...d.data()}));
+  }
+  async function loadHolidays(){
+    const ref=collection(db,"holidays");
+    const snapshot=isAdmin()
       ? await getDocs(ref)
       : await getDocs(query(ref,where("userId","==",signedInUser.uid)));
     return snapshot.docs.map(d=>({id:d.id,...d.data()}));
@@ -3020,11 +3188,65 @@
     }
   });
 
+
+  window.addEventListener("crew-holiday-save",async event=>{
+    if(!signedInUser || isAdmin()) return;
+    const payload=event.detail || {};
+    if(!payload.id || !payload.startDate || !payload.endDate) return;
+    try{
+      await setDoc(doc(db,"holidays",payload.id),{
+        userId:signedInUser.uid,
+        displayName:signedInProfile?.displayName || signedInUser.email || "Crew member",
+        email:signedInUser.email || "",
+        startDate:payload.startDate,
+        endDate:payload.endDate,
+        note:String(payload.note || "").trim(),
+        seen:false,
+        seenAt:null,
+        clientUpdatedAt:Date.now(),
+        updatedAt:serverTimestamp()
+      },{merge:true});
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"holiday"}}));
+    }catch(error){
+      console.error("Could not save holiday",error);
+      window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:false,type:"holiday"}}));
+      alert("Your holiday dates could not be saved. Please try again.");
+    }
+  });
+
+  window.addEventListener("crew-holiday-delete",async event=>{
+    if(!signedInUser || isAdmin()) return;
+    const holidayId=event.detail?.id;
+    if(!holidayId) return;
+    try{
+      await deleteDoc(doc(db,"holidays",holidayId));
+    }catch(error){
+      console.error("Could not delete holiday",error);
+      alert("Those holiday dates could not be deleted.");
+    }
+  });
+
+  window.addEventListener("crew-holiday-seen",async event=>{
+    if(!signedInUser || !isAdmin()) return;
+    const holidayId=event.detail?.id;
+    if(!holidayId) return;
+    try{
+      await setDoc(doc(db,"holidays",holidayId),{
+        seen:true,
+        seenAt:serverTimestamp(),
+        seenBy:signedInUser.uid
+      },{merge:true});
+    }catch(error){
+      console.error("Could not mark holiday as seen",error);
+      alert("That holiday could not be marked as seen.");
+    }
+  });
+
   window.addEventListener("crew-cloud-refresh",async ()=>{
     if(!signedInUser) return;
     try{
-      const [directory,responses]=await Promise.all([loadDirectory(),loadResponses()]);
-      window.crewCloudPeopleUpdated?.({directory,responses});
+      const [directory,responses,holidays]=await Promise.all([loadDirectory(),loadResponses(),loadHolidays()]);
+      window.crewCloudPeopleUpdated?.({directory,responses,holidays});
     }catch(error){
       console.error("Could not refresh crew replies",error);
     }
@@ -3033,6 +3255,7 @@
   function startLiveListeners(){
     stopGigsListener?.();
     stopResponsesListener?.();
+    stopHolidaysListener?.();
 
     stopGigsListener=onSnapshot(doc(db,"sharedData","gigs"),snap=>{
       window.crewCloudGigsUpdated?.(snap.exists()?(snap.data()?.bookings || []):[]);
@@ -3046,6 +3269,15 @@
       const responses=snap.docs.map(d=>({id:d.id,...d.data()}));
       window.crewCloudResponsesUpdated?.(responses);
     },error=>console.warn("Response live updates unavailable",error));
+
+    const holidayRef=isAdmin()
+      ? collection(db,"holidays")
+      : query(collection(db,"holidays"),where("userId","==",signedInUser.uid));
+
+    stopHolidaysListener=onSnapshot(holidayRef,snap=>{
+      const holidays=snap.docs.map(d=>({id:d.id,...d.data()}));
+      window.crewCloudHolidaysUpdated?.(holidays);
+    },error=>console.warn("Holiday live updates unavailable",error));
   }
 
   try{
@@ -3108,7 +3340,7 @@
   });
 
   onAuthStateChanged(auth,async user=>{
-    stopGigsListener?.(); stopResponsesListener?.();
+    stopGigsListener?.(); stopResponsesListener?.(); stopHolidaysListener?.();
     document.body.classList.remove("auth-pending","profile-required");
     signedInUser=user || null;
     signedInProfile=null;
@@ -3143,7 +3375,7 @@
       signedInRole=signedInProfile?.role || "member";
       const personalData=personalSnap.exists()?personalSnap.data()?.data:null;
       const sharedBookings=gigsSnap.exists()?(gigsSnap.data()?.bookings || []):[];
-      const [directory,responses]=await Promise.all([loadDirectory(),loadResponses()]);
+      const [directory,responses,holidays]=await Promise.all([loadDirectory(),loadResponses(),loadHolidays()]);
 
       await waitForCrewApp();
       window.crewLoadSignedInUser?.({
@@ -3154,7 +3386,7 @@
           colour:signedInProfile.colour || "#ff007f",
           running:Boolean(signedInProfile.running)
         }:null,
-        personalData,sharedBookings,directory,responses
+        personalData,sharedBookings,directory,responses,holidays
       });
 
       startLiveListeners();
@@ -3201,6 +3433,7 @@ const blankData = () => ({
   bookings:[],
   notes:[],
   adminSeenResponses:{},
+  adminSeenHolidayClashes:{},
   lastBackup:null
 });
 
@@ -3211,6 +3444,8 @@ let currentUserRole = "member";
 let cloudReady = false;
 let crewDirectory = [];
 let gigResponses = [];
+let holidays = [];
+let holidayCalendarDate = new Date(new Date().getFullYear(),new Date().getMonth(),1);
 
 
 function isAdminUser(){
@@ -3233,11 +3468,12 @@ function applyRoleUI(){
   document.querySelector(`[data-page="${targetPage}"]`)?.classList.add("active");
 }
 
-window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,sharedBookings,directory,responses}){
+window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,sharedBookings,directory,responses,holidays:holidayRows}){
   activeFirebaseUser={uid,email};
   currentUserRole=role || "member";
   crewDirectory=Array.isArray(directory)?directory:[];
   gigResponses=Array.isArray(responses)?responses:[];
+  holidays=Array.isArray(holidayRows)?holidayRows:[];
   cloudReady=false;
 
   const accountKey=`crewGirlsHubDataV1:${uid}`;
@@ -3277,6 +3513,7 @@ window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,shar
   init();
   applyRoleUI();
   renderAdminDashboard();
+  renderHolidays();
   cloudReady=true;
 
   if(!personalData && data.profile){
@@ -3295,18 +3532,28 @@ window.crewCloudGigsUpdated=function(bookings){
   data.bookings=Array.isArray(bookings)?bookings:[];
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   renderAll();
+  renderHolidays();
 };
 
 window.crewCloudResponsesUpdated=function(responses){
   gigResponses=Array.isArray(responses)?responses:[];
   renderBookings();
   renderTasks();
+  renderHolidays();
   renderAdminDashboard();
 };
 
 window.crewCloudPeopleUpdated=function(payload){
   crewDirectory=Array.isArray(payload?.directory)?payload.directory:crewDirectory;
   gigResponses=Array.isArray(payload?.responses)?payload.responses:gigResponses;
+  holidays=Array.isArray(payload?.holidays)?payload.holidays:holidays;
+  renderAdminDashboard();
+  renderHolidays();
+};
+
+window.crewCloudHolidaysUpdated=function(rows){
+  holidays=Array.isArray(rows)?rows:[];
+  renderHolidays();
   renderAdminDashboard();
 };
 
@@ -3438,6 +3685,41 @@ function renderStretchLibrary(){
   }));
 }
 
+
+
+document.getElementById("holidayForm")?.addEventListener("submit",event=>{
+  event.preventDefault();
+  if(isAdminUser() || !activeFirebaseUser) return;
+  const startDate=document.getElementById("holidayStart").value;
+  const endDate=document.getElementById("holidayEnd").value;
+  const note=document.getElementById("holidayNote").value.trim();
+  if(!startDate || !endDate) return;
+  if(endDate<startDate){
+    alert("The end date cannot be before the start date.");
+    return;
+  }
+  const existingId=document.getElementById("holidayId").value;
+  const id=existingId || `${activeFirebaseUser.uid}_${uid()}`;
+  window.dispatchEvent(new CustomEvent("crew-holiday-save",{detail:{id,startDate,endDate,note}}));
+  event.target.reset();
+  document.getElementById("holidayId").value="";
+  document.getElementById("holidaySaveButton").textContent="Add holiday dates";
+  alert("Holiday dates sent to the admins.");
+});
+
+document.getElementById("holidayMemberFilter")?.addEventListener("change",()=>{
+  renderAdminHolidays();
+});
+
+document.getElementById("holidayPrevMonth")?.addEventListener("click",()=>{
+  holidayCalendarDate=new Date(holidayCalendarDate.getFullYear(),holidayCalendarDate.getMonth()-1,1);
+  renderHolidayCalendar();
+});
+
+document.getElementById("holidayNextMonth")?.addEventListener("click",()=>{
+  holidayCalendarDate=new Date(holidayCalendarDate.getFullYear(),holidayCalendarDate.getMonth()+1,1);
+  renderHolidayCalendar();
+});
 
 function init(){
   renderColourChoices("setupColours",selectedSetupColour,c=>selectedSetupColour=c);
@@ -4064,6 +4346,252 @@ function renderTasks(){
     if(title) title.textContent=count===1?"1 gig needs your reply":`${count} gigs need your reply`;
     if(copy) copy.textContent="Open Tasks to send your availability.";
   }
+}
+
+
+function holidayMillis(value){
+  const stamp=value?.updatedAt;
+  if(stamp?.toMillis) return stamp.toMillis();
+  if(typeof stamp?.seconds==="number") return stamp.seconds*1000;
+  return Number(value?.clientUpdatedAt || 1);
+}
+
+function datesOverlap(startA,endA,startB,endB){
+  return startA<=endB && endA>=startB;
+}
+
+function holidayPersonName(holiday){
+  const member=crewDirectory.find(person=>person.id===holiday.userId);
+  return member?.displayName || holiday.displayName || holiday.email || "Crew member";
+}
+
+function memberHolidayRows(){
+  return [...holidays]
+    .filter(row=>row.userId===activeFirebaseUser?.uid)
+    .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)));
+}
+
+function upcomingHolidayRows(){
+  const today=todayISO();
+  return [...holidays]
+    .filter(row=>row.endDate>=today)
+    .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)));
+}
+
+function holidayRangeText(row){
+  return row.startDate===row.endDate
+    ? formatDate(row.startDate)
+    : `${formatDate(row.startDate)} to ${formatDate(row.endDate)}`;
+}
+
+function holidayClashes(){
+  const today=todayISO();
+  const upcomingGigs=data.bookings.filter(gig=>gig.date>=today);
+  const futureHolidays=holidays.filter(row=>row.endDate>=today);
+  const clashes=[];
+  upcomingGigs.forEach(gig=>{
+    futureHolidays.forEach(holiday=>{
+      if(datesOverlap(gig.date,gig.date,holiday.startDate,holiday.endDate)){
+        clashes.push({
+          id:`${gig.id}_${holiday.id}`,
+          gig,holiday,
+          person:holidayPersonName(holiday)
+        });
+      }
+    });
+  });
+  return clashes.sort((a,b)=>String(a.gig.date).localeCompare(String(b.gig.date)));
+}
+
+function isUnseenHolidayClash(clash){
+  return !(data.adminSeenHolidayClashes?.[clash.id]);
+}
+
+window.scrollToHolidayInbox=function(){
+  document.getElementById("holidayInboxAnchor")?.scrollIntoView({behavior:"smooth",block:"start"});
+};
+
+window.markHolidaySeen=function(id){
+  if(!isAdminUser()) return;
+  window.dispatchEvent(new CustomEvent("crew-holiday-seen",{detail:{id}}));
+};
+
+window.markHolidayClashSeen=function(id){
+  if(!isAdminUser()) return;
+  if(!data.adminSeenHolidayClashes || typeof data.adminSeenHolidayClashes!=="object"){
+    data.adminSeenHolidayClashes={};
+  }
+  data.adminSeenHolidayClashes[id]=Date.now();
+  saveData();
+  renderHolidays();
+};
+
+window.deleteHoliday=function(id){
+  if(isAdminUser()) return;
+  if(!confirm("Delete these holiday dates?")) return;
+  window.dispatchEvent(new CustomEvent("crew-holiday-delete",{detail:{id}}));
+};
+
+window.editHoliday=function(id){
+  if(isAdminUser()) return;
+  const row=holidays.find(item=>item.id===id && item.userId===activeFirebaseUser?.uid);
+  if(!row) return;
+  document.getElementById("holidayId").value=row.id;
+  document.getElementById("holidayStart").value=row.startDate;
+  document.getElementById("holidayEnd").value=row.endDate;
+  document.getElementById("holidayNote").value=row.note || "";
+  document.getElementById("holidaySaveButton").textContent="Update holiday dates";
+  document.getElementById("holidayForm")?.scrollIntoView({behavior:"smooth",block:"center"});
+};
+
+function renderMemberHolidays(){
+  if(isAdminUser()) return;
+  const list=document.getElementById("memberHolidayList");
+  if(!list) return;
+  const rows=memberHolidayRows().filter(row=>row.endDate>=todayISO());
+  document.getElementById("memberHolidayCount").textContent=`${rows.length} added`;
+  list.innerHTML=rows.length?rows.map(row=>`
+    <div class="holiday-card">
+      <div class="holiday-head">
+        <div>
+          <h3>${holidayRangeText(row)}</h3>
+          <div class="holiday-meta">${row.note?esc(row.note):"No note added"}</div>
+        </div>
+        <span class="holiday-status ${row.seen?"seen":"sent"}">${row.seen?"Seen by admin":"Sent"}</span>
+      </div>
+      <div class="holiday-actions">
+        <button class="secondary" type="button" onclick="editHoliday('${row.id}')">Edit</button>
+        <button class="danger-btn" type="button" onclick="deleteHoliday('${row.id}')">Delete</button>
+      </div>
+    </div>`).join(""):empty("☀","No upcoming holiday dates added.");
+}
+
+function populateHolidayFilter(){
+  const select=document.getElementById("holidayMemberFilter");
+  if(!select || !isAdminUser()) return;
+  const current=select.value;
+  const members=crewDirectory.filter(row=>!["admin","owner"].includes(row.role || "member"))
+    .sort((a,b)=>String(a.displayName||a.email).localeCompare(String(b.displayName||b.email)));
+  select.innerHTML=`<option value="">Everyone</option>`+members.map(member=>
+    `<option value="${member.id}">${esc(member.displayName || member.email || "Crew member")}</option>`
+  ).join("");
+  if([...select.options].some(option=>option.value===current)) select.value=current;
+}
+
+function renderHolidayCalendar(){
+  if(!isAdminUser()) return;
+  const target=document.getElementById("holidayCalendar");
+  if(!target) return;
+  const filter=document.getElementById("holidayMemberFilter")?.value || "";
+  const year=holidayCalendarDate.getFullYear();
+  const month=holidayCalendarDate.getMonth();
+  document.getElementById("holidayMonthTitle").textContent=
+    new Intl.DateTimeFormat("en-GB",{month:"long",year:"numeric"}).format(holidayCalendarDate);
+
+  const first=new Date(year,month,1);
+  const mondayIndex=(first.getDay()+6)%7;
+  const gridStart=new Date(year,month,1-mondayIndex);
+  const names=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  let html=names.map(name=>`<div class="holiday-calendar-head">${name}</div>`).join("");
+  const today=todayISO();
+
+  for(let i=0;i<42;i++){
+    const day=new Date(gridStart);
+    day.setDate(gridStart.getDate()+i);
+    const iso=`${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,"0")}-${String(day.getDate()).padStart(2,"0")}`;
+    const dayRows=holidays.filter(row=>
+      (!filter || row.userId===filter) &&
+      datesOverlap(iso,iso,row.startDate,row.endDate)
+    );
+    html+=`<div class="holiday-day ${day.getMonth()!==month?"outside":""} ${iso===today?"today":""}">
+      <div class="holiday-day-number">${day.getDate()}</div>
+      ${dayRows.slice(0,3).map(row=>`<span class="holiday-day-person" title="${esc(holidayPersonName(row))}">${esc(holidayPersonName(row))}</span>`).join("")}
+      ${dayRows.length>3?`<span class="holiday-day-person">+${dayRows.length-3} more</span>`:""}
+    </div>`;
+  }
+  target.innerHTML=html;
+}
+
+function renderAdminHolidays(){
+  if(!isAdminUser()) return;
+  populateHolidayFilter();
+
+  const upcoming=upcomingHolidayRows();
+  const unseen=upcoming.filter(row=>!row.seen);
+  const clashes=holidayClashes();
+  const unseenClashes=clashes.filter(isUnseenHolidayClash);
+  const totalAlerts=unseen.length+unseenClashes.length;
+
+  const navBadge=document.getElementById("holidayNavBadge");
+  if(navBadge){
+    navBadge.textContent=totalAlerts;
+    navBadge.classList.toggle("hidden",totalAlerts===0);
+  }
+
+  const alert=document.getElementById("holidayAdminAlert");
+  if(alert){
+    alert.classList.toggle("hidden",totalAlerts===0);
+    document.getElementById("holidayAdminAlertTitle").textContent=
+      totalAlerts===1?"1 holiday item needs attention":`${totalAlerts} holiday items need attention`;
+    document.getElementById("holidayAdminAlertCopy").textContent=
+      `${unseen.length} new date ${unseen.length===1?"entry":"entries"} and ${unseenClashes.length} unseen ${unseenClashes.length===1?"clash":"clashes"}.`;
+  }
+
+  document.getElementById("holidayInboxCount").textContent=`${unseen.length} new`;
+  const inbox=document.getElementById("adminHolidayInbox");
+  inbox.innerHTML=unseen.length?unseen.map(row=>`
+    <div class="holiday-card new-item">
+      <div class="holiday-head">
+        <div>
+          <h3>${esc(holidayPersonName(row))}</h3>
+          <div class="holiday-meta">${holidayRangeText(row)}</div>
+        </div>
+        <span class="holiday-status sent">New</span>
+      </div>
+      ${row.note?`<p class="holiday-note">${esc(row.note)}</p>`:""}
+      <div class="holiday-actions">
+        <button class="primary" type="button" onclick="markHolidaySeen('${row.id}')">Mark as seen</button>
+      </div>
+    </div>`).join(""):empty("✓","No new holiday dates waiting.");
+
+  document.getElementById("holidayClashCount").textContent=`${unseenClashes.length} unseen`;
+  const clashList=document.getElementById("adminHolidayClashes");
+  clashList.innerHTML=unseenClashes.length?unseenClashes.map(clash=>`
+    <div class="holiday-card clash-item">
+      <div class="holiday-head">
+        <div>
+          <h3>Holiday clash detected</h3>
+          <div class="holiday-meta"><strong>${esc(clash.gig.name)}</strong> · ${formatDate(clash.gig.date)}</div>
+        </div>
+        <span class="holiday-status clash">Clash</span>
+      </div>
+      <p class="holiday-note">${esc(clash.person)} is marked away ${holidayRangeText(clash.holiday).toLowerCase()}.</p>
+      <div class="holiday-actions">
+        <button class="primary" type="button" onclick="markHolidayClashSeen('${clash.id}')">Mark as seen</button>
+      </div>
+    </div>`).join(""):empty("✓","No unseen holiday clashes.");
+
+  const filter=document.getElementById("holidayMemberFilter")?.value || "";
+  const filtered=upcoming.filter(row=>!filter || row.userId===filter);
+  document.getElementById("allHolidayCount").textContent=`${filtered.length} entries`;
+  const allList=document.getElementById("adminHolidayList");
+  allList.innerHTML=filtered.length?filtered.map(row=>`
+    <div class="holiday-card">
+      <div class="holiday-head">
+        <div>
+          <h3>${esc(holidayPersonName(row))}</h3>
+          <div class="holiday-meta">${holidayRangeText(row)}${row.note?`<br>${esc(row.note)}`:""}</div>
+        </div>
+        <span class="holiday-status ${row.seen?"seen":"sent"}">${row.seen?"Seen":"New"}</span>
+      </div>
+    </div>`).join(""):empty("☀","No upcoming holiday dates.");
+
+  renderHolidayCalendar();
+}
+
+function renderHolidays(){
+  renderMemberHolidays();
+  renderAdminHolidays();
 }
 
 function responseUpdatedMillis(response){
