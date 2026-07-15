@@ -19,7 +19,7 @@ messaging.onBackgroundMessage(payload=>{
   const options={
     body:data.body || "There is a new Crew Girls update.",
     icon:"./apple-touch-icon.png",
-    badge:"./favicon.png",
+    badge:"./notification-badge.png",
     tag:data.tag || "crew-girls-update",
     renotify:true,
     data:{url:data.url || "./"}
