@@ -1829,7 +1829,7 @@
   }
 
 
-  /* Firebase cloud data + role controls — v7.5 */
+  /* Firebase cloud data + role controls — v7.6 */
   .admin-only.hidden-by-role{display:none!important}
   .role-badge{
     display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
@@ -2889,7 +2889,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v7.5</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v7.6</strong><br>
         Video Library
       </div>
 
@@ -3726,10 +3726,10 @@ function renderStretchLibrary(){
 
 
 
-document.getElementById("closeHolidayDayModal")?.addEventListener("click",window.closeHolidayDay);
-document.getElementById("holidayDayBackButton")?.addEventListener("click",window.closeHolidayDay);
+document.getElementById("closeHolidayDayModal")?.addEventListener("click",()=>window.closeHolidayDay?.());
+document.getElementById("holidayDayBackButton")?.addEventListener("click",()=>window.closeHolidayDay?.());
 document.getElementById("holidayDayModal")?.addEventListener("click",event=>{
-  if(event.target.id==="holidayDayModal") window.closeHolidayDay();
+  if(event.target.id==="holidayDayModal") window.closeHolidayDay?.();
 });
 
 document.getElementById("holidayForm")?.addEventListener("submit",event=>{
@@ -4524,12 +4524,25 @@ function populateHolidayFilter(){
 }
 
 
+
+function uniqueHolidayPeopleForDay(rows){
+  const byPerson=new Map();
+  [...rows]
+    .sort((a,b)=>holidayMillis(b)-holidayMillis(a))
+    .forEach(row=>{
+      const key=row.userId || `${holidayPersonName(row)}_${row.email || ""}`;
+      if(!byPerson.has(key)) byPerson.set(key,row);
+    });
+  return [...byPerson.values()]
+    .sort((a,b)=>holidayPersonName(a).localeCompare(holidayPersonName(b)));
+}
+
 window.openHolidayDay=function(iso){
   if(!isAdminUser()) return;
   const filter=document.getElementById("holidayMemberFilter")?.value || "";
-  const rows=[...holidays]
-    .filter(row=>(!filter || row.userId===filter) && datesOverlap(iso,iso,row.startDate,row.endDate))
-    .sort((a,b)=>holidayPersonName(a).localeCompare(holidayPersonName(b)));
+  const rows=uniqueHolidayPeopleForDay(
+    holidays.filter(row=>(!filter || row.userId===filter) && datesOverlap(iso,iso,row.startDate,row.endDate))
+  );
 
   const modal=document.getElementById("holidayDayModal");
   const list=document.getElementById("holidayDayModalList");
@@ -4578,9 +4591,11 @@ function renderHolidayCalendar(){
     const day=new Date(gridStart);
     day.setDate(gridStart.getDate()+i);
     const iso=`${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,"0")}-${String(day.getDate()).padStart(2,"0")}`;
-    const dayRows=holidays.filter(row=>
-      (!filter || row.userId===filter) &&
-      datesOverlap(iso,iso,row.startDate,row.endDate)
+    const dayRows=uniqueHolidayPeopleForDay(
+      holidays.filter(row=>
+        (!filter || row.userId===filter) &&
+        datesOverlap(iso,iso,row.startDate,row.endDate)
+      )
     );
     html+=`<div class="holiday-day ${day.getMonth()!==month?"outside":""} ${iso===today?"today":""} ${dayRows.length?"has-holidays":""}"
       ${dayRows.length?`role="button" tabindex="0" aria-label="Open everyone away on ${formatDate(iso)}" onclick="openHolidayDay('${iso}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHolidayDay('${iso}')}"`:""}>
