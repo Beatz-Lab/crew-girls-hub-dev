@@ -3726,10 +3726,10 @@ function renderStretchLibrary(){
 
 
 
-document.getElementById("closeHolidayDayModal")?.addEventListener("click",closeHolidayDay);
-document.getElementById("holidayDayBackButton")?.addEventListener("click",closeHolidayDay);
+document.getElementById("closeHolidayDayModal")?.addEventListener("click",window.closeHolidayDay);
+document.getElementById("holidayDayBackButton")?.addEventListener("click",window.closeHolidayDay);
 document.getElementById("holidayDayModal")?.addEventListener("click",event=>{
-  if(event.target.id==="holidayDayModal") closeHolidayDay();
+  if(event.target.id==="holidayDayModal") window.closeHolidayDay();
 });
 
 document.getElementById("holidayForm")?.addEventListener("submit",event=>{
