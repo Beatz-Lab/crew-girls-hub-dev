@@ -1731,7 +1731,7 @@
   }
 
 
-  /* Firebase login gate — v7.0 */
+  /* Firebase login gate — v7.1 */
   body.auth-pending #setupScreen,
   body.auth-pending #app,
   body.auth-required #setupScreen,
@@ -1805,7 +1805,7 @@
   }
 
 
-  /* Firebase member profile gate — v7.0 */
+  /* Firebase member profile gate — v7.1 */
   body.profile-required #authScreen,
   body.profile-required #setupScreen,
   body.profile-required #app{display:none!important}
@@ -1829,7 +1829,7 @@
   }
 
 
-  /* Firebase cloud data + role controls — v7.0 */
+  /* Firebase cloud data + role controls — v7.1 */
   .admin-only.hidden-by-role{display:none!important}
   .role-badge{
     display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
@@ -1838,7 +1838,7 @@
   }
 
 
-  /* v7.0 role dashboards and gig availability */
+  /* v7.1 role dashboards and gig availability */
   .admin-dashboard{display:none}
   body[data-user-role="admin"] .admin-dashboard,
   body[data-user-role="owner"] .admin-dashboard{display:block}
@@ -1847,6 +1847,7 @@
   body[data-user-role="member"] .admin-only-page{display:none!important}
   body[data-user-role="admin"] .bottom-nav,
   body[data-user-role="owner"] .bottom-nav{grid-template-columns:repeat(3,1fr)}
+  body[data-user-role="member"] .bottom-nav{grid-template-columns:repeat(7,1fr)}
   body[data-user-role="admin"] .bottom-nav .crew-nav,
   body[data-user-role="owner"] .bottom-nav .crew-nav{display:none!important}
   body[data-user-role="member"] .admin-nav{display:none!important}
@@ -1883,6 +1884,27 @@
     .admin-stat{padding:11px 7px}
     .admin-stat strong{font-size:1.2rem}
   }
+
+
+  /* v7.1 crew tasks */
+  .task-hero{padding:22px;border-radius:26px;margin-bottom:16px;background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,.025)),var(--panel);border:1px solid rgba(255,255,255,.08)}
+  .task-hero h2{margin:0 0 6px;font-size:1.5rem}
+  .task-hero p{margin:0;color:var(--muted);line-height:1.5}
+  .task-count{display:inline-flex;align-items:center;justify-content:center;min-width:27px;height:27px;padding:0 8px;border-radius:999px;background:var(--danger);color:#fff;font-size:.75rem;font-weight:900;margin-left:7px;box-shadow:0 0 16px rgba(255,90,105,.45)}
+  .nav-task-badge{position:absolute;top:2px;right:calc(50% - 21px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:grid;place-items:center;background:var(--danger);color:#fff;font-size:.62rem;font-weight:900;line-height:1}
+  .nav-btn{position:relative}
+  .task-card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:15px}
+  .task-card + .task-card{margin-top:10px}
+  .task-title-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .task-title-row h3{margin:0 0 5px;font-size:1rem}
+  .task-status{font-size:.7rem;font-weight:900;padding:5px 8px;border-radius:999px}
+  .task-status.open{background:rgba(255,90,105,.13);color:#ffadb5}
+  .task-status.done{background:rgba(90,211,156,.12);color:#8ce9bc}
+  .task-meta{color:var(--muted);font-size:.8rem;line-height:1.45}
+  .task-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .home-task-banner{margin-bottom:16px;padding:14px 15px;border-radius:17px;background:rgba(255,90,105,.09);border:1px solid rgba(255,90,105,.22);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .home-task-banner strong{display:block}
+  .home-task-banner small{display:block;color:var(--muted);margin-top:3px}
 
 </style>
 </head>
@@ -2001,6 +2023,11 @@
         <div class="eyebrow">✦ Crew mode</div>
         <h2 id="welcomeName">Hi 👋</h2>
         <p id="homeGoal">Keep moving, keep improving.</p>
+      </div>
+
+      <div id="homeTaskBanner" class="home-task-banner hidden">
+        <div><strong id="homeTaskTitle">You have gigs waiting for a reply</strong><small id="homeTaskCopy">Open Tasks to respond.</small></div>
+        <button class="primary" type="button" onclick="goToTasks()">View tasks</button>
       </div>
 
       <div id="nextGigCard" class="card next-gig"></div><div id="latestAchievementWrap" class="hidden"><div class="section-title"><h2>Latest achievement</h2></div><div class="card" id="latestAchievementCard"></div></div>
@@ -2508,6 +2535,18 @@
       </div>
     </section>
 
+    <section id="tasksPage" class="page crew-only">
+      <div class="task-hero">
+        <div class="eyebrow">✓ Your action list</div>
+        <h2>Tasks <span id="taskPageCount" class="task-count hidden">0</span></h2>
+        <p>Any gig still waiting for your availability appears here, so nothing gets lost if a phone notification is dismissed.</p>
+      </div>
+      <div class="section-title"><h2>Needs your reply</h2><small id="openTaskLabel">0 outstanding</small></div>
+      <div id="openTaskList"></div>
+      <div class="section-title"><h2>Recently answered</h2><small>Your reply history</small></div>
+      <div id="completedTaskList"></div>
+    </section>
+
     <section id="bookingsPage" class="page">
       <div class="section-title"><h2>Upcoming gigs</h2><button class="primary" data-open="bookingModal">+ Add</button></div>
       <div class="list" id="upcomingBookings"></div>
@@ -2566,7 +2605,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v7.0</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v7.1</strong><br>
         Video Library
       </div>
 
@@ -2576,6 +2615,7 @@
   <nav class="bottom-nav">
     <button class="nav-btn admin-nav" data-page="adminPage"><span>◆</span>Admin</button>
     <button class="nav-btn active crew-nav" data-page="homePage"><span>⌂</span>Home</button>
+    <button class="nav-btn crew-nav" data-page="tasksPage"><span>✓</span>Tasks<i id="taskNavBadge" class="nav-task-badge hidden">0</i></button>
     <button class="nav-btn crew-nav" data-page="routinesPage"><span>♫</span>Routines</button>
     <button class="nav-btn crew-nav" data-page="trainingPage"><span>✦</span>Training</button>
     <button class="nav-btn crew-nav" data-page="stretchesPage"><span>☽</span>Stretches</button>
@@ -3140,6 +3180,7 @@ window.crewCloudGigsUpdated=function(bookings){
 window.crewCloudResponsesUpdated=function(responses){
   gigResponses=Array.isArray(responses)?responses:[];
   renderBookings();
+  renderTasks();
   renderAdminDashboard();
 };
 
@@ -3832,6 +3873,7 @@ window.saveGigResponse=function(gigId){
   gigResponses=gigResponses.filter(r=>!(r.gigId===gigId && r.userId===activeFirebaseUser?.uid));
   gigResponses.push(localResponse);
   renderBookings();
+  renderTasks();
   window.crewSaveGigResponse?.(gigId,status,note);
   alert("Reply sent to the admins.");
 };
@@ -3842,6 +3884,68 @@ function renderBookings(){
   document.getElementById("upcomingBookings").innerHTML=upcoming.length?upcoming.map(bookingHTML).join(""):empty("📍","No upcoming gigs.");
   document.getElementById("pastBookings").innerHTML=past.length?past.map(bookingHTML).join(""):empty("✓","No previous gigs yet.");
 }
+
+window.goToTasks=function(){
+  document.querySelectorAll(".page").forEach(page=>page.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(btn=>btn.classList.remove("active"));
+  document.getElementById("tasksPage")?.classList.add("active");
+  document.querySelector('[data-page="tasksPage"]')?.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+
+function taskCardHTML(gig,reply){
+  const answered=Boolean(reply);
+  return `<div class="task-card">
+    <div class="task-title-row">
+      <div><h3>${esc(gig.name)}</h3><div class="task-meta">${formatDate(gig.date)}${gig.meet?` · Meet ${esc(gig.meet)}`:""}${gig.location?`<br>${esc(gig.location)}`:""}</div></div>
+      <span class="task-status ${answered?"done":"open"}">${answered?responseLabel(reply.status):"Reply needed"}</span>
+    </div>
+    ${gig.notes?`<p>${esc(gig.notes)}</p>`:""}
+    ${answered && reply.note?`<p><strong>Your note:</strong> ${esc(reply.note)}</p>`:""}
+    <div class="task-actions"><button class="${answered?"secondary":"primary"}" type="button" onclick="openTaskGig('${gig.id}')">${answered?"View or change reply":"Reply now"}</button></div>
+  </div>`;
+}
+
+window.openTaskGig=function(gigId){
+  document.querySelectorAll(".page").forEach(page=>page.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(btn=>btn.classList.remove("active"));
+  document.getElementById("bookingsPage")?.classList.add("active");
+  document.querySelector('[data-page="bookingsPage"]')?.classList.add("active");
+  setTimeout(()=>{
+    const select=document.getElementById(`responseStatus_${gigId}`);
+    select?.scrollIntoView({behavior:"smooth",block:"center"});
+    select?.focus();
+  },100);
+};
+
+function renderTasks(){
+  if(isAdminUser()) return;
+  const now=new Date();
+  const upcoming=[...data.bookings].filter(g=>dateObj(g.date,g.meet||g.time||"23:59")>=now).sort((a,b)=>dateObj(a.date,a.meet||a.time)-dateObj(b.date,b.meet||b.time));
+  const open=upcoming.filter(g=>!responseForGig(g.id));
+  const completed=upcoming.filter(g=>responseForGig(g.id));
+
+  const openList=document.getElementById("openTaskList");
+  const completedList=document.getElementById("completedTaskList");
+  if(openList) openList.innerHTML=open.length?open.map(g=>taskCardHTML(g,null)).join(""):empty("✓","You're all caught up. No gigs need a reply.");
+  if(completedList) completedList.innerHTML=completed.length?completed.map(g=>taskCardHTML(g,responseForGig(g.id))).join(""):empty("◆","No replies sent yet.");
+
+  const count=open.length;
+  const badge=document.getElementById("taskNavBadge");
+  const pageCount=document.getElementById("taskPageCount");
+  const openLabel=document.getElementById("openTaskLabel");
+  const homeBanner=document.getElementById("homeTaskBanner");
+  [badge,pageCount].forEach(el=>{if(el){el.textContent=count;el.classList.toggle("hidden",count===0)}});
+  if(openLabel) openLabel.textContent=`${count} outstanding`;
+  if(homeBanner){
+    homeBanner.classList.toggle("hidden",count===0);
+    const title=document.getElementById("homeTaskTitle");
+    const copy=document.getElementById("homeTaskCopy");
+    if(title) title.textContent=count===1?"1 gig needs your reply":`${count} gigs need your reply`;
+    if(copy) copy.textContent="Open Tasks to send your availability.";
+  }
+}
+
 function renderAdminDashboard(){
   if(!isAdminUser()) return;
   const el=document.getElementById("adminGigList");
