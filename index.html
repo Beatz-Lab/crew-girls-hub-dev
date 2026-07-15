@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111114" />
 <title>Crew Girls Hub</title>
 
-<link rel="manifest" href="manifest.json?v=68">
+<link rel="manifest" href="manifest.json?v=80">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2102,6 +2102,78 @@
   }
   .holiday-day-detail-back{margin-top:14px}
 
+
+  /* v8.0 push notification setup */
+  .notification-setup{
+    display:none;
+    margin:0 0 16px;
+    padding:15px;
+    border-radius:18px;
+    background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,.025)),var(--panel);
+    border:1px solid rgba(255,255,255,.09);
+    box-shadow:var(--shadow);
+  }
+  .notification-setup.show{display:block}
+  .notification-setup-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:13px;
+  }
+  .notification-setup-copy{min-width:0}
+  .notification-setup-copy strong{display:block;font-size:.96rem}
+  .notification-setup-copy small{
+    display:block;
+    margin-top:4px;
+    color:var(--muted);
+    line-height:1.4;
+  }
+  .notification-setup .notification-icon{
+    font-size:1.45rem;
+    line-height:1;
+    flex:0 0 auto;
+  }
+  .notification-setup button{flex:0 0 auto}
+  .notification-status{
+    margin-top:9px;
+    font-size:.75rem;
+    color:var(--muted);
+    line-height:1.4;
+  }
+  .notification-status.success{color:var(--success)}
+  .notification-status.error{color:#ffadb5}
+  .notification-toast{
+    position:fixed;
+    z-index:100;
+    left:50%;
+    top:82px;
+    transform:translate(-50%,-12px);
+    width:min(calc(100% - 30px),520px);
+    padding:13px 15px;
+    border-radius:16px;
+    background:#23232b;
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 16px 38px rgba(0,0,0,.42);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;
+  }
+  .notification-toast.show{
+    opacity:1;
+    transform:translate(-50%,0);
+  }
+  .notification-toast strong{display:block}
+  .notification-toast small{
+    display:block;
+    color:var(--muted);
+    margin-top:4px;
+    line-height:1.4;
+  }
+  @media(max-width:560px){
+    .notification-setup-row{align-items:flex-start;flex-wrap:wrap}
+    .notification-setup button{width:100%}
+  }
+
 </style>
 </head>
 <body class="auth-pending">
@@ -2199,6 +2271,18 @@
 </header>
 
   <main>
+    <div id="notificationSetup" class="notification-setup" aria-live="polite">
+      <div class="notification-setup-row">
+        <div class="notification-icon" aria-hidden="true">🔔</div>
+        <div class="notification-setup-copy">
+          <strong>Turn on Crew Girls notifications</strong>
+          <small id="notificationSetupCopy">Get new gigs, replies and holiday updates even when the app is closed.</small>
+        </div>
+        <button id="enableNotificationsButton" class="primary" type="button">Enable notifications</button>
+      </div>
+      <div id="notificationStatus" class="notification-status"></div>
+    </div>
+
     <section id="adminPage" class="page admin-only-page">
       <div class="admin-hero">
         <div class="eyebrow">◆ Crew control centre</div>
@@ -2889,7 +2973,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v7.7</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v8.0</strong><br>
         Video Library
       </div>
 
@@ -2909,6 +2993,11 @@
   </nav>
 </div>
 
+
+<div id="notificationToast" class="notification-toast" role="status" aria-live="polite">
+  <strong id="notificationToastTitle">Crew Girls Hub</strong>
+  <small id="notificationToastBody"></small>
+</div>
 
 <div class="modal" id="historyModal">
   <div class="modal-sheet">
@@ -3066,6 +3155,9 @@
     getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc,
     collection, query, where, onSnapshot, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import {
+    getMessaging, getToken, onMessage, isSupported
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDdCh0RPkFlidYS9cLA71v5HAeBJdctgQI",
@@ -3079,6 +3171,13 @@
   const firebaseApp = initializeApp(firebaseConfig);
   const auth = getAuth(firebaseApp);
   const db = getFirestore(firebaseApp);
+
+  const WEB_PUSH_PUBLIC_KEY = "BCH93eZkL9YNe_Q5F9YAlR2RVy2LwbIBLA-JY4Jlk36gdJ0ums8St_ctPCfudC0CY83uaANNbVld6KruGdidw94";
+  let messaging = null;
+  let messagingRegistration = null;
+  let foregroundMessageStop = null;
+  let notificationToastTimer = null;
+
 
   const authScreen = document.getElementById("authScreen");
   const loginForm = document.getElementById("loginForm");
@@ -3103,6 +3202,14 @@
   const forgotPasswordButton = document.getElementById("forgotPasswordButton");
   const signOutButton = document.getElementById("signOutButton");
   const memberProfileScreen = document.getElementById("memberProfileScreen");
+  const notificationSetup = document.getElementById("notificationSetup");
+  const notificationSetupCopy = document.getElementById("notificationSetupCopy");
+  const notificationStatus = document.getElementById("notificationStatus");
+  const enableNotificationsButton = document.getElementById("enableNotificationsButton");
+  const notificationToast = document.getElementById("notificationToast");
+  const notificationToastTitle = document.getElementById("notificationToastTitle");
+  const notificationToastBody = document.getElementById("notificationToastBody");
+
 
   let signedInUser = null;
   let signedInProfile = null;
@@ -3112,6 +3219,193 @@
   let stopHolidaysListener = null;
 
   const isAdmin = () => signedInRole === "admin" || signedInRole === "owner";
+
+
+  function isIOSDevice(){
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  function isStandaloneApp(){
+    return window.matchMedia?.("(display-mode: standalone)")?.matches
+      || navigator.standalone === true;
+  }
+
+  function setNotificationStatus(message,type=""){
+    if(!notificationStatus) return;
+    notificationStatus.textContent=message || "";
+    notificationStatus.className=`notification-status ${type}`.trim();
+  }
+
+  function showNotificationToast(title,body){
+    if(!notificationToast) return;
+    notificationToastTitle.textContent=title || "Crew Girls Hub";
+    notificationToastBody.textContent=body || "";
+    notificationToast.classList.add("show");
+    clearTimeout(notificationToastTimer);
+    notificationToastTimer=setTimeout(()=>notificationToast.classList.remove("show"),5200);
+  }
+
+  async function notificationTokenId(token,uid){
+    const bytes=new TextEncoder().encode(token);
+    const digest=await crypto.subtle.digest("SHA-256",bytes);
+    const hash=[...new Uint8Array(digest)]
+      .map(value=>value.toString(16).padStart(2,"0"))
+      .join("");
+    return `${uid}_${hash.slice(0,48)}`;
+  }
+
+  async function ensureMessaging(){
+    if(messaging && messagingRegistration) return {messaging,registration:messagingRegistration};
+    if(!("serviceWorker" in navigator) || !("Notification" in window)){
+      throw new Error("notifications-unsupported");
+    }
+    const supported=await isSupported();
+    if(!supported) throw new Error("notifications-unsupported");
+
+    messagingRegistration=await navigator.serviceWorker.register("./firebase-messaging-sw.js?v=80",{
+      scope:"./"
+    });
+    await navigator.serviceWorker.ready;
+    messaging=getMessaging(firebaseApp);
+
+    if(!foregroundMessageStop){
+      foregroundMessageStop=onMessage(messaging,payload=>{
+        const title=payload?.data?.title || payload?.notification?.title || "Crew Girls Hub";
+        const body=payload?.data?.body || payload?.notification?.body || "";
+        showNotificationToast(title,body);
+        messagingRegistration?.showNotification?.(title,{
+          body,
+          icon:"./apple-touch-icon.png",
+          badge:"./favicon.png",
+          tag:payload?.data?.tag || payload?.messageId || "crew-girls-update",
+          data:{url:payload?.data?.url || "./"}
+        }).catch(()=>{});
+      });
+    }
+    return {messaging,registration:messagingRegistration};
+  }
+
+  async function savePushToken(token){
+    if(!signedInUser || !token) return;
+    const tokenId=await notificationTokenId(token,signedInUser.uid);
+    const platform=isIOSDevice()?"ios-web":"web";
+    await setDoc(doc(db,"pushTokens",tokenId),{
+      userId:signedInUser.uid,
+      role:signedInRole || "member",
+      displayName:signedInProfile?.displayName || signedInUser.email || "Crew member",
+      email:signedInUser.email || "",
+      token,
+      platform,
+      userAgent:navigator.userAgent.slice(0,300),
+      enabled:true,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    localStorage.setItem(`crewPushTokenDoc:${signedInUser.uid}`,tokenId);
+  }
+
+  async function removeCurrentPushToken(){
+    if(!signedInUser) return;
+    const storageKey=`crewPushTokenDoc:${signedInUser.uid}`;
+    const tokenId=localStorage.getItem(storageKey);
+    if(!tokenId) return;
+    try{
+      await deleteDoc(doc(db,"pushTokens",tokenId));
+      localStorage.removeItem(storageKey);
+    }catch(error){
+      console.warn("Could not remove this device notification token",error);
+    }
+  }
+
+  async function registerPushNotifications({askPermission=false,silent=false}={}){
+    if(!signedInUser) return false;
+
+    if(isIOSDevice() && !isStandaloneApp()){
+      notificationSetup?.classList.add("show");
+      notificationSetupCopy.textContent="On iPhone, open Crew Girls Hub from its Home Screen icon before enabling notifications.";
+      setNotificationStatus("Add the app to your Home Screen, open it there, then try again.","error");
+      return false;
+    }
+
+    if(Notification.permission==="denied"){
+      notificationSetup?.classList.add("show");
+      enableNotificationsButton.disabled=true;
+      enableNotificationsButton.textContent="Notifications blocked";
+      setNotificationStatus("Notifications are blocked in this phone's settings.","error");
+      return false;
+    }
+
+    if(askPermission && Notification.permission!=="granted"){
+      const permission=await Notification.requestPermission();
+      if(permission!=="granted"){
+        notificationSetup?.classList.add("show");
+        setNotificationStatus("Notifications were not enabled. You can try again later.","error");
+        return false;
+      }
+    }
+
+    if(Notification.permission!=="granted"){
+      notificationSetup?.classList.add("show");
+      setNotificationStatus("");
+      return false;
+    }
+
+    try{
+      if(!silent){
+        enableNotificationsButton.disabled=true;
+        enableNotificationsButton.textContent="Enabling…";
+        setNotificationStatus("Registering this phone…");
+      }
+      const {messaging,registration}=await ensureMessaging();
+      const token=await getToken(messaging,{
+        vapidKey:WEB_PUSH_PUBLIC_KEY,
+        serviceWorkerRegistration:registration
+      });
+      if(!token) throw new Error("token-not-created");
+      await savePushToken(token);
+      notificationSetup?.classList.remove("show");
+      setNotificationStatus("Notifications are enabled on this device.","success");
+      return true;
+    }catch(error){
+      console.error("Could not enable notifications",error);
+      notificationSetup?.classList.add("show");
+      setNotificationStatus(
+        error?.message==="notifications-unsupported"
+          ?"This browser does not support app notifications."
+          :"Notifications could not be enabled yet. Please try again.",
+        "error"
+      );
+      return false;
+    }finally{
+      enableNotificationsButton.disabled=false;
+      enableNotificationsButton.textContent="Enable notifications";
+    }
+  }
+
+  function refreshNotificationPrompt(){
+    if(!signedInUser || !notificationSetup || !("Notification" in window)){
+      notificationSetup?.classList.remove("show");
+      return;
+    }
+    if(Notification.permission==="granted"){
+      notificationSetup.classList.remove("show");
+      registerPushNotifications({silent:true});
+      return;
+    }
+    notificationSetup.classList.add("show");
+    if(Notification.permission==="denied"){
+      enableNotificationsButton.disabled=true;
+      enableNotificationsButton.textContent="Notifications blocked";
+      setNotificationStatus("Allow notifications in your phone or browser settings.","error");
+    }else{
+      enableNotificationsButton.disabled=false;
+      enableNotificationsButton.textContent="Enable notifications";
+      setNotificationStatus("");
+    }
+  }
+
+  enableNotificationsButton?.addEventListener("click",()=>{
+    registerPushNotifications({askPermission:true});
+  });
 
   function showAuthError(message){
     loginError.textContent = message;
@@ -3374,7 +3668,10 @@
 
   signOutButton.addEventListener("click",async ()=>{
     signOutButton.disabled=true;
-    try{await signOut(auth)}
+    try{
+      await removeCurrentPushToken();
+      await signOut(auth);
+    }
     catch(error){alert("Sign out didn't work. Please try again.")}
     finally{signOutButton.disabled=false}
   });
@@ -3394,6 +3691,7 @@
       document.getElementById("setupScreen")?.classList.add("hidden");
       document.getElementById("app")?.classList.add("hidden");
       authStatus.textContent="";
+      notificationSetup?.classList.remove("show");
       setTimeout(()=>loginEmail.focus(),50);
       return;
     }
@@ -3430,6 +3728,7 @@
       });
 
       startLiveListeners();
+      refreshNotificationPrompt();
       authStatus.textContent="";
     }catch(error){
       console.error("Could not load Crew Girls cloud data",error);
