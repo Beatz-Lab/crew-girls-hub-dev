@@ -1829,7 +1829,7 @@
   }
 
 
-  /* Firebase cloud data + role controls — v7.6 */
+  /* Firebase cloud data + role controls — v7.7 */
   .admin-only.hidden-by-role{display:none!important}
   .role-badge{
     display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
@@ -2889,7 +2889,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v7.6</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v7.7</strong><br>
         Video Library
       </div>
 
@@ -3027,10 +3027,12 @@
   <div class="modal-sheet">
     <div class="modal-head">
       <h2 id="holidayDayModalTitle">Who is away</h2>
-      <button id="closeHolidayDayModal" class="close" aria-label="Close">×</button>
+      <button id="closeHolidayDayModal" class="close" aria-label="Close"
+        onclick="const modal=this.closest('.modal'); modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');">×</button>
     </div>
     <div id="holidayDayModalList" class="holiday-day-detail-list"></div>
-    <button id="holidayDayBackButton" class="secondary full holiday-day-detail-back" type="button">← Back to full calendar</button>
+    <button id="holidayDayBackButton" class="secondary full holiday-day-detail-back" type="button"
+      onclick="const modal=this.closest('.modal'); modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');">← Back to full calendar</button>
   </div>
 </div>
 
