@@ -1731,7 +1731,7 @@
   }
 
 
-  /* Firebase login gate — v7.1 */
+  /* Firebase login gate — v7.2 */
   body.auth-pending #setupScreen,
   body.auth-pending #app,
   body.auth-required #setupScreen,
@@ -1805,7 +1805,7 @@
   }
 
 
-  /* Firebase member profile gate — v7.1 */
+  /* Firebase member profile gate — v7.2 */
   body.profile-required #authScreen,
   body.profile-required #setupScreen,
   body.profile-required #app{display:none!important}
@@ -1829,7 +1829,7 @@
   }
 
 
-  /* Firebase cloud data + role controls — v7.1 */
+  /* Firebase cloud data + role controls — v7.2 */
   .admin-only.hidden-by-role{display:none!important}
   .role-badge{
     display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
@@ -1838,7 +1838,7 @@
   }
 
 
-  /* v7.1 role dashboards and gig availability */
+  /* v7.2 role dashboards and gig availability */
   .admin-dashboard{display:none}
   body[data-user-role="admin"] .admin-dashboard,
   body[data-user-role="owner"] .admin-dashboard{display:block}
@@ -1886,7 +1886,7 @@
   }
 
 
-  /* v7.1 crew tasks */
+  /* v7.2 crew tasks */
   .task-hero{padding:22px;border-radius:26px;margin-bottom:16px;background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,.025)),var(--panel);border:1px solid rgba(255,255,255,.08)}
   .task-hero h2{margin:0 0 6px;font-size:1.5rem}
   .task-hero p{margin:0;color:var(--muted);line-height:1.5}
@@ -1905,6 +1905,76 @@
   .home-task-banner{margin-bottom:16px;padding:14px 15px;border-radius:17px;background:rgba(255,90,105,.09);border:1px solid rgba(255,90,105,.22);display:flex;align-items:center;justify-content:space-between;gap:12px}
   .home-task-banner strong{display:block}
   .home-task-banner small{display:block;color:var(--muted);margin-top:3px}
+
+
+  /* v7.2 admin reply inbox */
+  .admin-reply-alert{
+    margin:0 0 16px;
+    padding:14px 15px;
+    border-radius:17px;
+    background:rgba(255,90,105,.09);
+    border:1px solid rgba(255,90,105,.24);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .admin-reply-alert strong{display:block}
+  .admin-reply-alert small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+  .admin-new-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:25px;
+    height:25px;
+    padding:0 8px;
+    border-radius:999px;
+    background:var(--danger);
+    color:#fff;
+    font-size:.7rem;
+    font-weight:900;
+    box-shadow:0 0 16px rgba(255,90,105,.4);
+  }
+  .admin-gig-card.has-new{
+    border-color:rgba(255,90,105,.34);
+    box-shadow:0 0 0 1px rgba(255,90,105,.08),var(--shadow);
+  }
+  .admin-gig-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .admin-gig-badges{
+    display:flex;
+    justify-content:flex-end;
+    gap:7px;
+    flex-wrap:wrap;
+  }
+  .admin-replies-panel{margin-top:12px}
+  .admin-replies-panel.collapsed{display:none}
+  .admin-review-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:11px;
+  }
+  .admin-nav-badge{
+    position:absolute;
+    top:2px;
+    right:calc(50% - 22px);
+    min-width:18px;
+    height:18px;
+    padding:0 5px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    background:var(--danger);
+    color:#fff;
+    font-size:.62rem;
+    font-weight:900;
+    line-height:1;
+  }
 
 </style>
 </head>
@@ -2009,6 +2079,15 @@
           <button class="secondary" type="button" id="adminRefreshBtn">↻ Refresh replies</button>
         </div>
       </div>
+
+      <div id="adminReplyAlert" class="admin-reply-alert hidden">
+        <div>
+          <strong id="adminReplyAlertTitle">New crew replies</strong>
+          <small id="adminReplyAlertCopy">Open the highlighted gigs to review what changed.</small>
+        </div>
+        <button class="primary" type="button" onclick="openFirstNewReply()">Review</button>
+      </div>
+
       <div class="admin-stat-grid">
         <div class="admin-stat"><strong id="adminUpcomingCount">0</strong><span>upcoming gigs</span></div>
         <div class="admin-stat"><strong id="adminReplyCount">0</strong><span>replies received</span></div>
@@ -2605,7 +2684,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v7.1</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v7.2</strong><br>
         Video Library
       </div>
 
@@ -2613,7 +2692,7 @@
   </main>
 
   <nav class="bottom-nav">
-    <button class="nav-btn admin-nav" data-page="adminPage"><span>◆</span>Admin</button>
+    <button class="nav-btn admin-nav" data-page="adminPage"><span>◆</span>Admin<i id="adminNavBadge" class="admin-nav-badge hidden">0</i></button>
     <button class="nav-btn active crew-nav" data-page="homePage"><span>⌂</span>Home</button>
     <button class="nav-btn crew-nav" data-page="tasksPage"><span>✓</span>Tasks<i id="taskNavBadge" class="nav-task-badge hidden">0</i></button>
     <button class="nav-btn crew-nav" data-page="routinesPage"><span>♫</span>Routines</button>
@@ -2899,6 +2978,7 @@
         displayName:signedInProfile?.displayName || signedInUser.email || "Crew member",
         email:signedInUser.email || "",
         status,note:String(note || "").trim(),
+        clientUpdatedAt:Date.now(),
         updatedAt:serverTimestamp()
       },{merge:true});
       window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"response"}}));
@@ -3081,6 +3161,7 @@ const blankData = () => ({
   runs:[],
   bookings:[],
   notes:[],
+  adminSeenResponses:{},
   lastBackup:null
 });
 
@@ -3946,10 +4027,60 @@ function renderTasks(){
   }
 }
 
+function responseUpdatedMillis(response){
+  const stamp=response?.updatedAt;
+  if(stamp?.toMillis) return stamp.toMillis();
+  if(typeof stamp?.seconds==="number") return (stamp.seconds*1000)+Math.floor((stamp.nanoseconds||0)/1000000);
+  if(typeof response?.clientUpdatedAt==="number") return response.clientUpdatedAt;
+  return 1;
+}
+
+function isNewAdminReply(response){
+  const seen=data.adminSeenResponses?.[response.id] || 0;
+  return responseUpdatedMillis(response)>seen;
+}
+
+function newRepliesForGig(gigId){
+  return gigResponses.filter(r=>r.gigId===gigId && isNewAdminReply(r));
+}
+
+window.toggleAdminGigReplies=function(gigId){
+  document.getElementById(`adminReplies_${gigId}`)?.classList.toggle("collapsed");
+};
+
+window.markGigRepliesReviewed=function(gigId){
+  if(!isAdminUser()) return;
+  if(!data.adminSeenResponses || typeof data.adminSeenResponses!=="object"){
+    data.adminSeenResponses={};
+  }
+  gigResponses.filter(r=>r.gigId===gigId).forEach(response=>{
+    data.adminSeenResponses[response.id]=responseUpdatedMillis(response);
+  });
+  saveData();
+  renderAdminDashboard();
+};
+
+window.openFirstNewReply=function(){
+  const now=new Date();
+  const gig=[...data.bookings]
+    .filter(g=>dateObj(g.date,g.meet||g.time||"23:59")>=now)
+    .sort((a,b)=>dateObj(a.date,a.meet||a.time)-dateObj(b.date,b.meet||b.time))
+    .find(g=>newRepliesForGig(g.id).length);
+  if(!gig) return;
+  const card=document.getElementById(`adminGig_${gig.id}`);
+  const panel=document.getElementById(`adminReplies_${gig.id}`);
+  panel?.classList.remove("collapsed");
+  card?.scrollIntoView({behavior:"smooth",block:"start"});
+};
+
 function renderAdminDashboard(){
   if(!isAdminUser()) return;
   const el=document.getElementById("adminGigList");
   if(!el) return;
+
+  if(!data.adminSeenResponses || typeof data.adminSeenResponses!=="object"){
+    data.adminSeenResponses={};
+  }
 
   const now=new Date();
   const upcoming=[...data.bookings]
@@ -3958,12 +4089,28 @@ function renderAdminDashboard(){
 
   const members=crewDirectory.filter(u=>!["admin","owner"].includes(u.role || "member"));
   const upcomingResponses=gigResponses.filter(r=>upcoming.some(g=>g.id===r.gigId));
+  const newResponses=upcomingResponses.filter(isNewAdminReply);
 
   document.getElementById("adminWelcome").textContent=`Hi ${data.profile?.name || "Admin"} — crew control centre`;
   document.getElementById("adminUpcomingCount").textContent=upcoming.length;
   document.getElementById("adminReplyCount").textContent=upcomingResponses.length;
   const expected=upcoming.length*members.length;
   document.getElementById("adminPendingCount").textContent=Math.max(0,expected-upcomingResponses.length);
+
+  const alert=document.getElementById("adminReplyAlert");
+  const alertTitle=document.getElementById("adminReplyAlertTitle");
+  const alertCopy=document.getElementById("adminReplyAlertCopy");
+  const navBadge=document.getElementById("adminNavBadge");
+
+  if(alert){
+    alert.classList.toggle("hidden",newResponses.length===0);
+    if(alertTitle) alertTitle.textContent=newResponses.length===1?"1 new crew reply":`${newResponses.length} new crew replies`;
+    if(alertCopy) alertCopy.textContent="The matching gigs are highlighted below. Review them, then mark them as seen.";
+  }
+  if(navBadge){
+    navBadge.textContent=newResponses.length;
+    navBadge.classList.toggle("hidden",newResponses.length===0);
+  }
 
   if(!upcoming.length){
     el.innerHTML=`<div class="admin-empty">No upcoming gigs yet. Tap Add a gig to create the first one.</div>`;
@@ -3972,6 +4119,7 @@ function renderAdminDashboard(){
 
   el.innerHTML=upcoming.map(gig=>{
     const responses=gigResponses.filter(r=>r.gigId===gig.id);
+    const newForGig=newRepliesForGig(gig.id);
     const counts={
       available:responses.filter(r=>r.status==="available").length,
       maybe:responses.filter(r=>r.status==="maybe").length,
@@ -3979,16 +4127,27 @@ function renderAdminDashboard(){
     };
     const rows=members.map(member=>{
       const reply=responses.find(r=>r.userId===member.id);
+      const replyIsNew=reply && isNewAdminReply(reply);
       return `<div class="response-row">
-        <div><strong>${esc(member.displayName || member.email || "Crew member")}</strong>${reply?.note?`<small>${esc(reply.note)}</small>`:""}</div>
+        <div>
+          <strong>${esc(member.displayName || member.email || "Crew member")}${replyIsNew?` <span class="admin-new-badge">New</span>`:""}</strong>
+          ${reply?.note?`<small>${esc(reply.note)}</small>`:""}
+        </div>
         <span class="response-chip ${reply?.status || "pending"}">${responseLabel(reply?.status)}</span>
       </div>`;
     }).join("");
 
-    return `<div class="item">
-      <div class="item-head">
-        <div><h4>${esc(gig.name)}</h4><div class="item-meta">${formatDate(gig.date)}${gig.meet?` · Meet ${esc(gig.meet)}`:""}${gig.location?`<br>${esc(gig.location)}`:""}</div></div>
-        <span class="pill">${timeUntil(gig.date)}</span>
+    const panelStartsOpen=newForGig.length>0;
+    return `<div id="adminGig_${gig.id}" class="item admin-gig-card ${newForGig.length?"has-new":""}">
+      <div class="admin-gig-top">
+        <div>
+          <h4>${esc(gig.name)}</h4>
+          <div class="item-meta">${formatDate(gig.date)}${gig.meet?` · Meet ${esc(gig.meet)}`:""}${gig.location?`<br>${esc(gig.location)}`:""}</div>
+        </div>
+        <div class="admin-gig-badges">
+          ${newForGig.length?`<span class="admin-new-badge">${newForGig.length} new</span>`:""}
+          <span class="pill">${timeUntil(gig.date)}</span>
+        </div>
       </div>
       <div class="response-summary">
         <span class="response-chip available">✓ ${counts.available} available</span>
@@ -3996,15 +4155,20 @@ function renderAdminDashboard(){
         <span class="response-chip unavailable">× ${counts.unavailable} unavailable</span>
         <span class="response-chip pending">… ${Math.max(0,members.length-responses.length)} waiting</span>
       </div>
-      <div class="response-list">${rows || `<div class="sync-note">No crew member accounts found yet.</div>`}</div>
-      <div class="item-actions">
-        <button class="tiny-btn" onclick="editBooking('${gig.id}')">Edit gig</button>
-        <button class="tiny-btn danger" onclick="deleteItem('bookings','${gig.id}')">Delete gig</button>
+      <div class="admin-review-actions">
+        <button class="secondary" type="button" onclick="toggleAdminGigReplies('${gig.id}')">${panelStartsOpen?"Hide":"View"} crew replies</button>
+        ${newForGig.length?`<button class="primary" type="button" onclick="markGigRepliesReviewed('${gig.id}')">Mark reviewed</button>`:""}
+      </div>
+      <div id="adminReplies_${gig.id}" class="admin-replies-panel ${panelStartsOpen?"":"collapsed"}">
+        <div class="response-list">${rows || `<div class="sync-note">No crew member accounts found yet.</div>`}</div>
+        <div class="item-actions">
+          <button class="tiny-btn" onclick="editBooking('${gig.id}')">Edit gig</button>
+          <button class="tiny-btn danger" onclick="deleteItem('bookings','${gig.id}')">Delete gig</button>
+        </div>
       </div>
     </div>`;
   }).join("");
 }
-
 function renderBackup(){
   const el=document.getElementById("backupStatus");
   el.textContent=data.lastBackup?`Last backup: ${new Intl.DateTimeFormat("en-GB",{dateStyle:"medium",timeStyle:"short"}).format(new Date(data.lastBackup))}`:"No backup recorded yet.";
