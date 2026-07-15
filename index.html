@@ -1731,7 +1731,7 @@
   }
 
 
-  /* Firebase login gate — v6.10 */
+  /* Firebase login gate — v6.11 */
   body.auth-pending #setupScreen,
   body.auth-pending #app,
   body.auth-required #setupScreen,
@@ -1805,7 +1805,7 @@
   }
 
 
-  /* Firebase member profile gate — v6.10 */
+  /* Firebase member profile gate — v6.11 */
   body.profile-required #authScreen,
   body.profile-required #setupScreen,
   body.profile-required #app{display:none!important}
@@ -1875,8 +1875,8 @@
 <section id="setupScreen" class="setup hidden">
   <div class="setup-card">
     <div class="setup-logo"><img src="data:image/jpeg;base64,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" alt="Crew Girls logo"></div>
-    <h1>Crew Girls Hub</h1>
-    <p class="subtitle">Your routines, training, flexibility and gigs — all in one place.</p>
+    <h1>Set up your profile</h1>
+    <p class="subtitle">Choose your name, personal goal and colour — you can change them later.</p>
 
     <form id="setupForm" class="form-grid">
       <div class="field">
@@ -2491,7 +2491,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v6.10</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v6.11</strong><br>
         Video Library
       </div>
 
@@ -2664,7 +2664,6 @@
   const firebaseApp = initializeApp(firebaseConfig);
   const auth = getAuth(firebaseApp);
   const db = getFirestore(firebaseApp);
-  const LOCAL_DATA_KEY = "crewGirlsHubDataV1";
 
   const authScreen = document.getElementById("authScreen");
   const loginForm = document.getElementById("loginForm");
@@ -2675,35 +2674,24 @@
   const authStatus = document.getElementById("authStatus");
   const forgotPasswordButton = document.getElementById("forgotPasswordButton");
   const signOutButton = document.getElementById("signOutButton");
-
   const memberProfileScreen = document.getElementById("memberProfileScreen");
-  const memberProfileForm = document.getElementById("memberProfileForm");
-  const memberDisplayName = document.getElementById("memberDisplayName");
-  const memberProfileEmail = document.getElementById("memberProfileEmail");
-  const memberProfileError = document.getElementById("memberProfileError");
-  const memberProfileButton = document.getElementById("memberProfileButton");
 
   let signedInUser = null;
+  let signedInProfile = null;
 
   function showAuthError(message){
     loginError.textContent = message;
     loginError.classList.add("show");
   }
+
   function clearAuthError(){
     loginError.textContent = "";
     loginError.classList.remove("show");
   }
-  function showMemberProfileError(message){
-    memberProfileError.textContent = message;
-    memberProfileError.classList.add("show");
-  }
-  function clearMemberProfileError(){
-    memberProfileError.textContent = "";
-    memberProfileError.classList.remove("show");
-  }
+
   function friendlyAuthError(error){
     const code = error?.code || "";
-    if(code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"){
+    if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(code)){
       return "That email or password doesn't match. Check both and try again.";
     }
     if(code === "auth/invalid-email") return "That email address doesn't look right.";
@@ -2713,41 +2701,42 @@
     return "Sign-in didn't work just yet. Please try again.";
   }
 
-  function putFirebaseNameIntoLocalApp(displayName){
-    let saved = {};
-    try{
-      saved = JSON.parse(localStorage.getItem(LOCAL_DATA_KEY) || "{}");
-    }catch(error){
-      saved = {};
-    }
-    const oldProfile = saved.profile && typeof saved.profile === "object" ? saved.profile : {};
-    saved.profile = {
-      ...oldProfile,
-      name: displayName,
-      goal: oldProfile.goal || "",
-      colour: oldProfile.colour || "#ff007f",
-      running: Boolean(oldProfile.running)
+  function waitForCrewApp(){
+    if(typeof window.crewLoadSignedInUser === "function") return Promise.resolve();
+    return new Promise(resolve=>{
+      window.addEventListener("crew-app-ready", resolve, {once:true});
+      setTimeout(resolve, 2500);
+    });
+  }
+
+  async function saveFirebaseProfile(profile){
+    if(!signedInUser || !profile) return;
+
+    const payload = {
+      displayName: String(profile.name || "").trim(),
+      goal: String(profile.goal || "").trim(),
+      colour: profile.colour || "#ff007f",
+      running: Boolean(profile.running),
+      email: signedInUser.email || "",
+      role: signedInProfile?.role || "member",
+      updatedAt: serverTimestamp()
     };
-    localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(saved));
+
+    if(!signedInProfile) payload.createdAt = serverTimestamp();
+
+    await setDoc(doc(db, "users", signedInUser.uid), payload, {merge:true});
+    signedInProfile = {...signedInProfile, ...payload};
   }
 
-  function openAppWithProfile(profile){
-    const displayName = String(profile?.displayName || "").trim();
-    if(!displayName) return false;
-    putFirebaseNameIntoLocalApp(displayName);
-    document.body.classList.remove("profile-required", "auth-required");
-    authScreen.classList.add("hidden");
-    memberProfileScreen.classList.add("hidden");
-    signOutButton.classList.remove("hidden");
-    authStatus.textContent = "";
-    if(typeof window.init === "function") window.init();
-    return true;
-  }
-
-  async function loadMemberProfile(user){
-    const snapshot = await getDoc(doc(db, "users", user.uid));
-    return snapshot.exists() ? snapshot.data() : null;
-  }
+  window.addEventListener("crew-profile-save", async event=>{
+    try{
+      await saveFirebaseProfile(event.detail);
+      window.dispatchEvent(new CustomEvent("crew-profile-save-result",{detail:{ok:true}}));
+    }catch(error){
+      console.error("Could not save Firebase profile", error);
+      window.dispatchEvent(new CustomEvent("crew-profile-save-result",{detail:{ok:false}}));
+    }
+  });
 
   try{
     await setPersistence(auth, browserLocalPersistence);
@@ -2755,12 +2744,13 @@
     console.warn("Could not set Firebase sign-in persistence", error);
   }
 
-  loginForm.addEventListener("submit", async (event)=>{
+  loginForm.addEventListener("submit", async event=>{
     event.preventDefault();
     clearAuthError();
     loginButton.disabled = true;
     loginButton.textContent = "Signing in…";
     authStatus.textContent = "Checking your details…";
+
     try{
       await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
       loginPassword.value = "";
@@ -2776,13 +2766,16 @@
   forgotPasswordButton.addEventListener("click", async ()=>{
     clearAuthError();
     const email = loginEmail.value.trim();
+
     if(!email){
       showAuthError("Enter your email address first, then tap Forgot password.");
       loginEmail.focus();
       return;
     }
+
     forgotPasswordButton.disabled = true;
     authStatus.textContent = "Sending password reset email…";
+
     try{
       await sendPasswordResetEmail(auth, email);
       authStatus.textContent = "Password reset email sent. Check your inbox and junk folder.";
@@ -2791,34 +2784,6 @@
       authStatus.textContent = "";
     }finally{
       forgotPasswordButton.disabled = false;
-    }
-  });
-
-  memberProfileForm.addEventListener("submit", async (event)=>{
-    event.preventDefault();
-    clearMemberProfileError();
-    const displayName = memberDisplayName.value.trim();
-    if(!signedInUser || !displayName){
-      showMemberProfileError("Please enter your first name.");
-      return;
-    }
-    memberProfileButton.disabled = true;
-    memberProfileButton.textContent = "Saving…";
-    try{
-      await setDoc(doc(db, "users", signedInUser.uid), {
-        displayName,
-        email: signedInUser.email || "",
-        role: "member",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge:true });
-      openAppWithProfile({ displayName, role:"member" });
-    }catch(error){
-      console.error("Could not save member profile", error);
-      showMemberProfileError("Your profile couldn't be saved yet. Check your internet connection and try again.");
-    }finally{
-      memberProfileButton.disabled = false;
-      memberProfileButton.textContent = "Save my profile";
     }
   });
 
@@ -2833,15 +2798,15 @@
     }
   });
 
-  onAuthStateChanged(auth, async (user)=>{
-    document.body.classList.remove("auth-pending");
+  onAuthStateChanged(auth, async user=>{
+    document.body.classList.remove("auth-pending","profile-required");
     signedInUser = user || null;
+    signedInProfile = null;
 
     if(!user){
-      document.body.classList.remove("profile-required");
       document.body.classList.add("auth-required");
       authScreen.classList.remove("hidden");
-      memberProfileScreen.classList.add("hidden");
+      memberProfileScreen?.classList.add("hidden");
       signOutButton.classList.add("hidden");
       document.getElementById("setupScreen")?.classList.add("hidden");
       document.getElementById("app")?.classList.add("hidden");
@@ -2852,33 +2817,39 @@
 
     document.body.classList.remove("auth-required");
     authScreen.classList.add("hidden");
+    memberProfileScreen?.classList.add("hidden");
     signOutButton.classList.remove("hidden");
     authStatus.textContent = "Loading your Crew Girls profile…";
 
     try{
-      const profile = await loadMemberProfile(user);
-      if(profile && openAppWithProfile(profile)) return;
+      const snapshot = await getDoc(doc(db,"users",user.uid));
+      signedInProfile = snapshot.exists() ? snapshot.data() : null;
 
-      document.body.classList.add("profile-required");
-      memberProfileEmail.textContent = user.email || "";
-      memberDisplayName.value = "";
-      memberProfileScreen.classList.remove("hidden");
+      await waitForCrewApp();
+
+      window.crewLoadSignedInUser?.({
+        uid:user.uid,
+        email:user.email || "",
+        profile:signedInProfile ? {
+          name:signedInProfile.displayName || "",
+          goal:signedInProfile.goal || "",
+          colour:signedInProfile.colour || "#ff007f",
+          running:Boolean(signedInProfile.running)
+        } : null
+      });
+
       authStatus.textContent = "";
-      setTimeout(()=>memberDisplayName.focus(),50);
     }catch(error){
       console.error("Could not load member profile", error);
-      document.body.classList.add("profile-required");
-      memberProfileEmail.textContent = user.email || "";
-      memberProfileScreen.classList.remove("hidden");
-      showMemberProfileError("We couldn't load your profile. Check your internet connection and try again.");
       authStatus.textContent = "";
+      alert("We couldn't load your profile. Check your internet connection and try again.");
     }
   });
 </script>
 
 <script>
 if ("scrollRestoration" in history) { history.scrollRestoration = "manual"; }
-const STORAGE_KEY = "crewGirlsHubDataV1";
+let STORAGE_KEY = localStorage.getItem("crewGirlsActiveStorageKey") || "crewGirlsHubDataV1";
 const themes = [
   {id:"#ff007f",name:"Hot Pink",primary:"#ff007f",secondary:"#ff007f",fill:"#ff007f",text:"#ffffff"},
   {id:"#9d5cff",name:"Purple",primary:"#9d5cff",secondary:"#9d5cff",fill:"#9d5cff",text:"#ffffff"},
@@ -2913,6 +2884,59 @@ const blankData = () => ({
 });
 
 let data = loadData();
+
+let activeFirebaseUser = null;
+
+window.crewLoadSignedInUser = function({uid,email,profile}){
+  activeFirebaseUser = {uid,email};
+
+  const accountKey = `crewGirlsHubDataV1:${uid}`;
+  const migrationOwnerKey = "crewGirlsHubMigratedOwnerUid";
+
+  if(!localStorage.getItem(accountKey) && !localStorage.getItem(migrationOwnerKey)){
+    const oldDeviceData = localStorage.getItem("crewGirlsHubDataV1");
+    if(oldDeviceData){
+      localStorage.setItem(accountKey, oldDeviceData);
+      localStorage.setItem(migrationOwnerKey, uid);
+    }
+  }
+
+  STORAGE_KEY = accountKey;
+  localStorage.setItem("crewGirlsActiveStorageKey", accountKey);
+
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    data = saved ? {...blankData(),...JSON.parse(saved)} : blankData();
+  }catch(error){
+    data = blankData();
+  }
+
+  if(profile && profile.name){
+    data.profile = {
+      name:profile.name,
+      goal:profile.goal || "",
+      colour:profile.colour || themes[0].id,
+      running:Boolean(profile.running)
+    };
+  }else{
+    data.profile = null;
+  }
+
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  window.dispatchEvent(new CustomEvent("crew-profile-save",{detail:{...data.profile}}));
+  document.getElementById("setupScreen").classList.add("hidden");
+  document.getElementById("app").classList.add("hidden");
+  init();
+};
+
+window.addEventListener("crew-profile-save-result",event=>{
+  if(!event.detail?.ok){
+    alert("Your profile saved on this device, but couldn't sync online yet.");
+  }
+});
+
+window.dispatchEvent(new Event("crew-app-ready"));
+
 
 function loadData(){
   try{
@@ -3238,6 +3262,7 @@ document.getElementById("profileForm").addEventListener("submit",e=>{
     running:document.getElementById("profileRunning").checked
   };
   setAccent(selectedProfileColour);saveData();
+  window.dispatchEvent(new CustomEvent("crew-profile-save",{detail:{...data.profile}}));
   alert("Profile saved.");
 });
 
