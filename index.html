@@ -1731,7 +1731,7 @@
   }
 
 
-  /* Firebase login gate — v6.9 */
+  /* Firebase login gate — v6.10 */
   body.auth-pending #setupScreen,
   body.auth-pending #app,
   body.auth-required #setupScreen,
@@ -1804,6 +1804,30 @@
     font-weight:800;
   }
 
+
+  /* Firebase member profile gate — v6.10 */
+  body.profile-required #authScreen,
+  body.profile-required #setupScreen,
+  body.profile-required #app{display:none!important}
+  .member-profile-screen{
+    min-height:100vh;display:grid;place-items:center;padding:22px;
+    position:relative;z-index:101
+  }
+  .member-profile-card{
+    width:min(100%,460px);background:var(--panel);
+    border:1px solid rgba(255,255,255,.09);border-radius:28px;
+    padding:24px;box-shadow:var(--shadow)
+  }
+  .member-profile-card h1{text-align:center;margin:0;font-size:1.75rem}
+  .member-profile-email{
+    text-align:center;color:var(--muted);font-size:.8rem;
+    margin:5px 0 20px;overflow-wrap:anywhere
+  }
+  .member-profile-form{display:grid;gap:13px}
+  .member-profile-note{
+    color:var(--muted);font-size:.8rem;line-height:1.45;text-align:center
+  }
+
 </style>
 </head>
 <body class="auth-pending">
@@ -1826,6 +1850,23 @@
       <button id="loginButton" class="primary full" type="submit">Sign in</button>
       <button id="forgotPasswordButton" class="auth-help" type="button">Forgot password?</button>
       <div id="authStatus" class="auth-status">Checking your account…</div>
+    </form>
+  </div>
+</section>
+
+<section id="memberProfileScreen" class="member-profile-screen hidden">
+  <div class="member-profile-card">
+    <div class="auth-logo"><img src="favicon.png" alt="Crew Girls Hub logo"></div>
+    <h1>Who’s dancing in?</h1>
+    <p class="member-profile-email" id="memberProfileEmail"></p>
+    <form id="memberProfileForm" class="member-profile-form">
+      <div class="field">
+        <label for="memberDisplayName">Your first name</label>
+        <input id="memberDisplayName" maxlength="30" autocomplete="name" required placeholder="e.g. Emma">
+      </div>
+      <div id="memberProfileError" class="auth-error" role="alert"></div>
+      <button id="memberProfileButton" class="primary full" type="submit">Save my profile</button>
+      <div class="member-profile-note">You only need to do this once for each Crew Girls account.</div>
     </form>
   </div>
 </section>
@@ -2450,7 +2491,7 @@
       </div>
 
       <div style="text-align:center;margin:24px 0 6px;color:var(--muted);font-size:.78rem;line-height:1.5">
-        <strong style="color:var(--text)">Crew Girls Hub v6.9</strong><br>
+        <strong style="color:var(--text)">Crew Girls Hub v6.10</strong><br>
         Video Library
       </div>
 
@@ -2604,14 +2645,12 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
-    getAuth,
-    setPersistence,
-    browserLocalPersistence,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    sendPasswordResetEmail,
-    signOut
+    getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged,
+    signInWithEmailAndPassword, sendPasswordResetEmail, signOut
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDdCh0RPkFlidYS9cLA71v5HAeBJdctgQI",
@@ -2624,6 +2663,8 @@
 
   const firebaseApp = initializeApp(firebaseConfig);
   const auth = getAuth(firebaseApp);
+  const db = getFirestore(firebaseApp);
+  const LOCAL_DATA_KEY = "crewGirlsHubDataV1";
 
   const authScreen = document.getElementById("authScreen");
   const loginForm = document.getElementById("loginForm");
@@ -2635,16 +2676,31 @@
   const forgotPasswordButton = document.getElementById("forgotPasswordButton");
   const signOutButton = document.getElementById("signOutButton");
 
+  const memberProfileScreen = document.getElementById("memberProfileScreen");
+  const memberProfileForm = document.getElementById("memberProfileForm");
+  const memberDisplayName = document.getElementById("memberDisplayName");
+  const memberProfileEmail = document.getElementById("memberProfileEmail");
+  const memberProfileError = document.getElementById("memberProfileError");
+  const memberProfileButton = document.getElementById("memberProfileButton");
+
+  let signedInUser = null;
+
   function showAuthError(message){
     loginError.textContent = message;
     loginError.classList.add("show");
   }
-
   function clearAuthError(){
     loginError.textContent = "";
     loginError.classList.remove("show");
   }
-
+  function showMemberProfileError(message){
+    memberProfileError.textContent = message;
+    memberProfileError.classList.add("show");
+  }
+  function clearMemberProfileError(){
+    memberProfileError.textContent = "";
+    memberProfileError.classList.remove("show");
+  }
   function friendlyAuthError(error){
     const code = error?.code || "";
     if(code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"){
@@ -2655,6 +2711,42 @@
     if(code === "auth/network-request-failed") return "No internet connection. You need to be online to sign in.";
     if(code === "auth/unauthorized-domain") return "This website address still needs approving in Firebase.";
     return "Sign-in didn't work just yet. Please try again.";
+  }
+
+  function putFirebaseNameIntoLocalApp(displayName){
+    let saved = {};
+    try{
+      saved = JSON.parse(localStorage.getItem(LOCAL_DATA_KEY) || "{}");
+    }catch(error){
+      saved = {};
+    }
+    const oldProfile = saved.profile && typeof saved.profile === "object" ? saved.profile : {};
+    saved.profile = {
+      ...oldProfile,
+      name: displayName,
+      goal: oldProfile.goal || "",
+      colour: oldProfile.colour || "#ff007f",
+      running: Boolean(oldProfile.running)
+    };
+    localStorage.setItem(LOCAL_DATA_KEY, JSON.stringify(saved));
+  }
+
+  function openAppWithProfile(profile){
+    const displayName = String(profile?.displayName || "").trim();
+    if(!displayName) return false;
+    putFirebaseNameIntoLocalApp(displayName);
+    document.body.classList.remove("profile-required", "auth-required");
+    authScreen.classList.add("hidden");
+    memberProfileScreen.classList.add("hidden");
+    signOutButton.classList.remove("hidden");
+    authStatus.textContent = "";
+    if(typeof window.init === "function") window.init();
+    return true;
+  }
+
+  async function loadMemberProfile(user){
+    const snapshot = await getDoc(doc(db, "users", user.uid));
+    return snapshot.exists() ? snapshot.data() : null;
   }
 
   try{
@@ -2702,6 +2794,34 @@
     }
   });
 
+  memberProfileForm.addEventListener("submit", async (event)=>{
+    event.preventDefault();
+    clearMemberProfileError();
+    const displayName = memberDisplayName.value.trim();
+    if(!signedInUser || !displayName){
+      showMemberProfileError("Please enter your first name.");
+      return;
+    }
+    memberProfileButton.disabled = true;
+    memberProfileButton.textContent = "Saving…";
+    try{
+      await setDoc(doc(db, "users", signedInUser.uid), {
+        displayName,
+        email: signedInUser.email || "",
+        role: "member",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge:true });
+      openAppWithProfile({ displayName, role:"member" });
+    }catch(error){
+      console.error("Could not save member profile", error);
+      showMemberProfileError("Your profile couldn't be saved yet. Check your internet connection and try again.");
+    }finally{
+      memberProfileButton.disabled = false;
+      memberProfileButton.textContent = "Save my profile";
+    }
+  });
+
   signOutButton.addEventListener("click", async ()=>{
     signOutButton.disabled = true;
     try{
@@ -2713,22 +2833,45 @@
     }
   });
 
-  onAuthStateChanged(auth, (user)=>{
+  onAuthStateChanged(auth, async (user)=>{
     document.body.classList.remove("auth-pending");
-    if(user){
-      document.body.classList.remove("auth-required");
-      authScreen.classList.add("hidden");
-      signOutButton.classList.remove("hidden");
-      authStatus.textContent = "";
-      if(typeof window.init === "function") window.init();
-    }else{
+    signedInUser = user || null;
+
+    if(!user){
+      document.body.classList.remove("profile-required");
       document.body.classList.add("auth-required");
       authScreen.classList.remove("hidden");
+      memberProfileScreen.classList.add("hidden");
       signOutButton.classList.add("hidden");
       document.getElementById("setupScreen")?.classList.add("hidden");
       document.getElementById("app")?.classList.add("hidden");
       authStatus.textContent = "";
       setTimeout(()=>loginEmail.focus(),50);
+      return;
+    }
+
+    document.body.classList.remove("auth-required");
+    authScreen.classList.add("hidden");
+    signOutButton.classList.remove("hidden");
+    authStatus.textContent = "Loading your Crew Girls profile…";
+
+    try{
+      const profile = await loadMemberProfile(user);
+      if(profile && openAppWithProfile(profile)) return;
+
+      document.body.classList.add("profile-required");
+      memberProfileEmail.textContent = user.email || "";
+      memberDisplayName.value = "";
+      memberProfileScreen.classList.remove("hidden");
+      authStatus.textContent = "";
+      setTimeout(()=>memberDisplayName.focus(),50);
+    }catch(error){
+      console.error("Could not load member profile", error);
+      document.body.classList.add("profile-required");
+      memberProfileEmail.textContent = user.email || "";
+      memberProfileScreen.classList.remove("hidden");
+      showMemberProfileError("We couldn't load your profile. Check your internet connection and try again.");
+      authStatus.textContent = "";
     }
   });
 </script>
