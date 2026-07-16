@@ -1615,6 +1615,10 @@
   .resource-button .copy{display:flex;flex-direction:column;line-height:1.1}
   .resource-button .copy strong{font-size:.95rem}
   .resource-button .copy small{font-size:.72rem;color:var(--muted);margin-top:4px}
+  .quick-add-buttons{
+    grid-template-columns:repeat(auto-fit,minmax(220px,250px));
+    justify-content:center;
+  }
   @media(max-width:760px){
     .resource-buttons{grid-template-columns:1fr}
     .resource-button{width:min(100%,280px);justify-self:center}
@@ -2018,7 +2022,7 @@
   body[data-user-role="owner"] .member-holiday-view{display:none!important}
   body[data-user-role="admin"] .bottom-nav,
   body[data-user-role="owner"] .bottom-nav{grid-template-columns:repeat(4,1fr)}
-  body[data-user-role="member"] .bottom-nav{grid-template-columns:repeat(8,1fr)}
+  body[data-user-role="member"] .bottom-nav{grid-template-columns:repeat(7,1fr)}
   @media(max-width:560px){
     .holiday-admin-toolbar{grid-template-columns:1fr 1fr}
     .holiday-admin-toolbar .field{grid-column:1/-1}
@@ -2277,10 +2281,19 @@
       <div id="nextGigCard" class="card next-gig"></div><div id="latestAchievementWrap" class="hidden"><div class="section-title"><h2>Latest achievement</h2></div><div class="card" id="latestAchievementCard"></div></div>
 
       <div class="section-title"><h2>Quick add</h2></div>
-      <div class="quick-actions">
-        <button class="quick" data-open="flexModal"><span>🤸</span><small>Flex</small></button>
-        <button class="quick" data-open="trainingModal"><span>💪</span><small>Training</small></button>
-        <button class="quick" data-open="bookingModal"><span>📍</span><small>Gig</small></button>
+      <div class="resource-buttons quick-add-buttons">
+        <button class="resource-button" data-open="flexModal" type="button">
+          <span class="emoji">🤸</span>
+          <span class="copy"><strong>Flex</strong><small>Add flexibility progress</small></span>
+        </button>
+        <button class="resource-button" data-open="trainingModal" type="button">
+          <span class="emoji">💪</span>
+          <span class="copy"><strong>Training</strong><small>Add a training session</small></span>
+        </button>
+        <button class="resource-button" data-open="bookingModal" type="button">
+          <span class="emoji">📍</span>
+          <span class="copy"><strong>Gig</strong><small>Add an upcoming booking</small></span>
+        </button>
       </div>
       <div class="resource-buttons">
         <button class="resource-button" id="openStretchesQuick" type="button">
@@ -2644,7 +2657,6 @@
     <button class="nav-btn admin-nav" data-page="adminPage"><span>◆</span>Admin<i id="adminNavBadge" class="admin-nav-badge hidden">0</i></button>
     <button class="nav-btn active crew-nav" data-page="homePage"><span>⌂</span>Home</button>
     <button class="nav-btn crew-nav" data-page="tasksPage"><span>✓</span>Tasks<i id="taskNavBadge" class="nav-task-badge hidden">0</i></button>
-    <button class="nav-btn crew-nav" data-page="routinesPage"><span>♫</span>Routines</button>
     <button class="nav-btn crew-nav" data-page="trainingPage"><span>✦</span>Training</button>
     <button class="nav-btn crew-nav" data-page="stretchesPage"><span>☽</span>Stretches</button>
     <button class="nav-btn" data-page="holidaysPage"><span>☀</span>Holidays<i id="holidayNavBadge" class="holiday-nav-badge hidden">0</i></button>
