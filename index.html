@@ -299,7 +299,7 @@
 
   .quick-actions{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(3,1fr);
     gap:9px;
   }
   .quick{
@@ -547,7 +547,7 @@
 
   @media(max-width:560px){
     .grid{grid-template-columns:1fr 1fr}
-    .quick-actions{grid-template-columns:repeat(4,1fr)}
+    .quick-actions{grid-template-columns:repeat(3,1fr)}
     .quick-wide{width:min(100%, 250px)}
     .form-grid{grid-template-columns:1fr}
     .field.full-span{grid-column:auto}
@@ -1593,7 +1593,7 @@
   /* Video Library */
   .resource-buttons{
     display:grid;
-    grid-template-columns:repeat(3,minmax(0,250px));
+    grid-template-columns:repeat(2,minmax(0,250px));
     justify-content:center;
     gap:10px;
     margin-top:10px;
@@ -1615,49 +1615,6 @@
   .resource-button .copy{display:flex;flex-direction:column;line-height:1.1}
   .resource-button .copy strong{font-size:.95rem}
   .resource-button .copy small{font-size:.72rem;color:var(--muted);margin-top:4px}
-  .music-tools{display:grid;gap:10px;margin-top:12px}
-  .music-search{
-    width:100%;
-    border:1px solid rgba(255,255,255,.09);
-    background:rgba(255,255,255,.05);
-    color:var(--text);
-    border-radius:16px;
-    padding:13px 14px;
-    font:inherit;
-    outline:none;
-  }
-  .music-search:focus{
-    border-color:var(--accent);
-    box-shadow:0 0 0 3px var(--accent-soft);
-  }
-  .music-list{display:grid;gap:10px;margin-top:12px}
-  .music-card{
-    background:var(--panel-2);
-    border:1px solid rgba(255,255,255,.07);
-    border-radius:18px;
-    padding:13px;
-  }
-  .music-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:10px;
-  }
-  .music-title{min-width:0}
-  .music-title h3{margin:0;font-size:1rem;line-height:1.2}
-  .music-title p{margin:5px 0 0;color:var(--muted);font-size:.78rem}
-  .music-badge{
-    flex:0 0 auto;
-    font-size:.72rem;
-    padding:7px 9px;
-    border-radius:999px;
-    background:var(--accent-soft);
-    color:var(--accent);
-    border:1px solid rgba(255,255,255,.08);
-  }
-  .music-card audio{width:100%;display:block;accent-color:var(--accent)}
-  .music-empty{display:none;text-align:center;color:var(--muted);padding:18px}
   @media(max-width:760px){
     .resource-buttons{grid-template-columns:1fr}
     .resource-button{width:min(100%,280px);justify-self:center}
@@ -1670,12 +1627,6 @@
     .resource-button .copy small{font-weight:600;opacity:.9}
   }
 
-
-  .music-error{
-    margin-top:9px;
-    color:#ffb4b4;
-    font-size:.78rem;
-  }
 
 
   /* Video Library */
@@ -2329,17 +2280,12 @@
       <div class="quick-actions">
         <button class="quick" data-open="flexModal"><span>🤸</span><small>Flex</small></button>
         <button class="quick" data-open="trainingModal"><span>💪</span><small>Training</small></button>
-        <button class="quick" data-open="routineModal"><span>🎵</span><small>Routine</small></button>
         <button class="quick" data-open="bookingModal"><span>📍</span><small>Gig</small></button>
       </div>
       <div class="resource-buttons">
         <button class="resource-button" id="openStretchesQuick" type="button">
           <span class="emoji">🧘</span>
           <span class="copy"><strong>Stretch Library</strong><small>Open all stretch guides</small></span>
-        </button>
-        <button class="resource-button" id="openMusicQuick" type="button">
-          <span class="emoji">🎧</span>
-          <span class="copy"><strong>Music Library</strong><small>Play practice tracks</small></span>
         </button>
         <button class="resource-button" id="openVideosQuick" type="button">
           <span class="emoji">🎬</span>
@@ -2518,292 +2464,6 @@
           <p>Tap to view larger</p>
         </button>
       </div>
-    </section>
-
-
-    <section id="musicPage" class="page crew-only">
-      <div class="section-title">
-        <h2>Music Library</h2>
-      </div>
-      <div class="card">
-        <p class="item-meta">Search and play Crew Girls practice tracks. Tracks are listed alphabetically.</p>
-        <div class="music-tools">
-          <input class="music-search" id="musicSearch" type="search" placeholder="Search tracks...">
-        </div>
-      </div>
-      <div class="music-list" id="musicList">
-        <div class="music-card" data-track-name="20 dollars x sean paul">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>20 Dollars X Sean Paul</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/20-dollars-x-sean-paul.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="90s">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>90s</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/90s.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="90s 2">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>90s 2</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/90s-2.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="blade remix">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Blade Remix</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/blade-remix.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="chicago">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Chicago</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/chicago.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="clubland 1">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Clubland 1</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/clubland-1.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="craig david">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Craig David</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/craig-david.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="defib">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Defib</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/defib.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="friends dont lie">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Friends Dont Lie</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/friends-dont-lie.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="girl power">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Girl Power</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/girl-power.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="grease">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Grease</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/grease.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="halloween">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Halloween</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/halloween.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="haloween extended 2021">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Haloween Extended 2021</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/haloween-extended-2021.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="history">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>History</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/history.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="history 2">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>History 2</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/history-2.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="intro hybrid">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Intro Hybrid</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/intro-hybrid.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="legacy">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Legacy</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/legacy.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="legacy 2">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Legacy 2</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/legacy-2.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="linkin park">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Linkin Park</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/linkin-park.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="little mix">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Little Mix</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/little-mix.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="madonna">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Madonna</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/madonna.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="mary poppins">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Mary Poppins</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/mary-poppins.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="megamix tuneeeee">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Megamix Tuneeeee</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/megamix-tuneeeee.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="pendulum">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Pendulum</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/pendulum.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="prodigy tribute">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Prodigy Tribute</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/prodigy-tribute.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="quadrophenia">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Quadrophenia</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/quadrophenia.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="smooth crewminal">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Smooth Crewminal</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/smooth-crewminal.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="thriller">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Thriller</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/thriller.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="thriller reborn">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Thriller Reborn</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/thriller-reborn.mp3"></audio>
-        </div>
-        <div class="music-card" data-track-name="warriors">
-          <div class="music-head">
-            <div class="music-title">
-              <h3>Warriors</h3>
-            </div>
-            <span class="music-badge">MP3</span>
-          </div>
-          <audio controls preload="metadata" src="music/warriors.mp3"></audio>
-        </div>
-      </div>
-      <div class="card music-empty" id="musicEmpty">No tracks found.</div>
     </section>
 
 
@@ -4129,40 +3789,6 @@ if(openStretchesQuick){
 }
 
 
-const openMusicQuick=document.getElementById("openMusicQuick");
-if(openMusicQuick){
-  openMusicQuick.addEventListener("click",()=>{
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    document.getElementById("musicPage")?.classList.add("active");
-    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-    window.scrollTo({top:0,behavior:"smooth"});
-  });
-}
-
-const musicSearch=document.getElementById("musicSearch");
-if(musicSearch){
-  musicSearch.addEventListener("input",()=>{
-    const q=musicSearch.value.trim().toLowerCase();
-    let shown=0;
-    document.querySelectorAll(".music-card").forEach(card=>{
-      const match=(card.dataset.trackName||"").includes(q);
-      card.style.display=match?"block":"none";
-      if(match) shown++;
-    });
-    const empty=document.getElementById("musicEmpty");
-    if(empty) empty.style.display=shown?"none":"block";
-  });
-}
-
-document.addEventListener("play",(e)=>{
-  if(e.target && e.target.tagName==="AUDIO"){
-    document.querySelectorAll("audio").forEach(a=>{
-      if(a!==e.target) a.pause();
-    });
-  }
-},true);
-
-
 const openVideosQuick=document.getElementById("openVideosQuick");
 if(openVideosQuick){
   openVideosQuick.addEventListener("click",()=>{
@@ -5225,17 +4851,6 @@ document.addEventListener("click",(e)=>{
   modal.classList.add("open");
 });
 
-
-document.querySelectorAll(".music-card audio").forEach(audio=>{
-  audio.addEventListener("error",()=>{
-    const card=audio.closest(".music-card");
-    if(!card || card.querySelector(".music-error")) return;
-    const msg=document.createElement("div");
-    msg.className="music-error";
-    msg.textContent="Track file not found or not loaded yet.";
-    card.appendChild(msg);
-  });
-});
 
 </script>
 </body>
