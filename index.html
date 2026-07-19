@@ -446,6 +446,35 @@
   }
   .colour-dot.active{border-color:#fff;transform:scale(1.08)}
 
+  .gig-filter-card{
+    display:flex;
+    align-items:end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+    padding:13px;
+  }
+  .gig-filter-field{
+    flex:1 1 260px;
+    display:grid;
+    gap:7px;
+  }
+  .gig-filter-field select{
+    min-height:46px;
+  }
+  .gig-filter-count{
+    flex:0 0 auto;
+    color:var(--muted);
+    font-size:.78rem;
+    font-weight:800;
+    white-space:nowrap;
+    padding-bottom:13px;
+  }
+  @media(max-width:560px){
+    .gig-filter-card{align-items:stretch;flex-direction:column}
+    .gig-filter-count{padding:0;text-align:right}
+  }
+
   .tabs-inline{
     display:flex;gap:8px;overflow:auto;padding-bottom:4px;
   }
@@ -2590,6 +2619,15 @@
 
     <section id="bookingsPage" class="page">
       <div class="section-title"><h2>Upcoming gigs</h2><button class="primary" data-open="bookingModal">+ Add</button></div>
+      <div class="card gig-filter-card">
+        <div class="gig-filter-field">
+          <label for="gigMonthFilter">Show gigs for</label>
+          <select id="gigMonthFilter" aria-label="Filter upcoming gigs by month">
+            <option value="all">All upcoming gigs</option>
+          </select>
+        </div>
+        <div id="gigFilterCount" class="gig-filter-count">0 gigs shown</div>
+      </div>
       <div class="list" id="upcomingBookings"></div>
       <div class="section-title"><h2>Previous gigs</h2></div>
       <div class="list" id="pastBookings"></div>
@@ -2799,7 +2837,7 @@
 
 <div class="modal" id="bookingModal">
   <div class="modal-sheet">
-    <div class="modal-head"><h2>Add gig</h2><button class="close" data-close>×</button></div>
+    <div class="modal-head"><h2 id="bookingModalTitle">Add gig</h2><button class="close" data-close>×</button></div>
     <form id="bookingForm" class="form-grid">
       <input type="hidden" id="bookingId">
       <div class="field full-span"><label>Event or performance name</label><input id="bookingName" required maxlength="100"></div>
@@ -3162,10 +3200,21 @@
   window.addEventListener("crew-shared-gigs-save",async event=>{
     if(!signedInUser || !isAdmin()) return;
     try{
-      await setDoc(doc(db,"sharedData","gigs"),{
-        bookings:Array.isArray(event.detail)?event.detail:[],
-        updatedAt:serverTimestamp(),updatedBy:signedInUser.uid
-      },{merge:true});
+      const detail=event.detail || {};
+      const bookings=Array.isArray(detail) ? detail : (Array.isArray(detail.bookings) ? detail.bookings : []);
+      const payload={
+        bookings,
+        updatedAt:serverTimestamp(),
+        updatedBy:signedInUser.uid
+      };
+      if(detail && !Array.isArray(detail) && detail.change){
+        payload.lastChange={
+          ...detail.change,
+          changedBy:signedInUser.uid,
+          changedAt:serverTimestamp()
+        };
+      }
+      await setDoc(doc(db,"sharedData","gigs"),payload,{merge:true});
       window.dispatchEvent(new CustomEvent("crew-cloud-save-result",{detail:{ok:true,type:"gigs"}}));
     }catch(error){
       console.error("Could not save shared gigs",error);
@@ -3457,19 +3506,25 @@ let crewDirectory = [];
 let gigResponses = [];
 let holidays = [];
 let holidayCalendarDate = new Date(new Date().getFullYear(),new Date().getMonth(),1);
+let gigMonthFilter = "all";
+let pendingGigCloudChange = null;
 
 
 function isAdminUser(){
   return currentUserRole === "admin" || currentUserRole === "owner";
 }
 
-function applyRoleUI(){
+function applyRoleUI({resetPage=false}={}){
   const admin=isAdminUser();
   document.querySelectorAll('[data-open="bookingModal"], [data-open-inline="bookingModal"]').forEach(el=>{
     el.classList.add("admin-only");
     el.classList.toggle("hidden-by-role",!admin);
   });
   document.body.dataset.userRole=currentUserRole;
+
+  const currentPage=document.querySelector(".page.active");
+  const currentPageAllowed=currentPage && (admin || !currentPage.classList.contains("admin-only-page"));
+  if(!resetPage && currentPageAllowed) return;
 
   document.querySelectorAll(".nav-btn").forEach(btn=>btn.classList.remove("active"));
   document.querySelectorAll(".page").forEach(page=>page.classList.remove("active"));
@@ -3522,7 +3577,7 @@ window.crewLoadSignedInUser = function({uid,email,role,profile,personalData,shar
   document.getElementById("setupScreen").classList.add("hidden");
   document.getElementById("app").classList.add("hidden");
   init();
-  applyRoleUI();
+  applyRoleUI({resetPage:true});
   renderAdminDashboard();
   renderHolidays();
   cloudReady=true;
@@ -3588,7 +3643,11 @@ function saveData(){
   if(cloudReady && activeFirebaseUser){
     window.dispatchEvent(new CustomEvent("crew-personal-save",{detail:{...data,bookings:[]}}));
     if(isAdminUser()){
-      window.dispatchEvent(new CustomEvent("crew-shared-gigs-save",{detail:[...data.bookings]}));
+      const change=pendingGigCloudChange;
+      pendingGigCloudChange=null;
+      window.dispatchEvent(new CustomEvent("crew-shared-gigs-save",{
+        detail:{bookings:[...data.bookings],change}
+      }));
     }
   }
 }
@@ -3821,6 +3880,12 @@ if(adminRefreshBtn){
 }
 
 document.querySelectorAll("[data-open]").forEach(btn=>btn.addEventListener("click",()=>{
+  if(btn.dataset.open==="bookingModal"){
+    document.getElementById("bookingModalTitle").textContent="Add gig";
+    document.getElementById("bookingId").value="";
+    document.getElementById("bookingForm").reset();
+    document.getElementById("bookingDate").value=todayISO();
+  }
   document.getElementById(btn.dataset.open).classList.add("open");
 }));
 document.querySelectorAll("[data-close]").forEach(btn=>btn.addEventListener("click",()=>btn.closest(".modal").classList.remove("open")));
@@ -3916,7 +3981,15 @@ document.getElementById("bookingForm").addEventListener("submit",e=>{
     routines:document.getElementById("bookingRoutines").value.trim(),notes:document.getElementById("bookingNotes").value.trim()
   };
   const idx=data.bookings.findIndex(x=>x.id===id);
-  if(idx>=0)data.bookings[idx]=item;else data.bookings.push(item);
+  const isEdit=idx>=0;
+  if(isEdit)data.bookings[idx]=item;else data.bookings.push(item);
+  pendingGigCloudChange={
+    id:uid(),
+    type:isEdit?"updated":"created",
+    gigId:item.id,
+    gigName:item.name,
+    gigDate:item.date
+  };
   e.target.reset();document.getElementById("bookingDate").value=todayISO();document.getElementById("bookingId").value="";
   document.getElementById("bookingModal").classList.remove("open");saveData();
 });
@@ -4263,13 +4336,49 @@ window.saveGigResponse=function(gigId){
   window.crewSaveGigResponse?.(gigId,status,note);
   alert("Reply sent to the admins.");
 };
+function gigMonthKey(date){
+  return String(date || "").slice(0,7);
+}
+function gigMonthLabel(monthKey){
+  const [year,month]=String(monthKey || "").split("-").map(Number);
+  if(!year || !month) return monthKey;
+  return new Intl.DateTimeFormat("en-GB",{month:"long",year:"numeric"}).format(new Date(year,month-1,1));
+}
+function updateGigMonthFilter(upcoming){
+  const select=document.getElementById("gigMonthFilter");
+  if(!select) return;
+  const monthCounts=new Map();
+  upcoming.forEach(gig=>{
+    const key=gigMonthKey(gig.date);
+    if(key) monthCounts.set(key,(monthCounts.get(key)||0)+1);
+  });
+  const months=[...monthCounts.keys()].sort();
+  if(gigMonthFilter!=="all" && !monthCounts.has(gigMonthFilter)) gigMonthFilter="all";
+  select.innerHTML=[
+    `<option value="all">All upcoming gigs (${upcoming.length})</option>`,
+    ...months.map(key=>`<option value="${key}">${esc(gigMonthLabel(key))} (${monthCounts.get(key)})</option>`)
+  ].join("");
+  select.value=gigMonthFilter;
+  select.disabled=upcoming.length===0;
+}
 function renderBookings(){
   const now=new Date();
   const upcoming=[...data.bookings].filter(b=>dateObj(b.date,b.meet||b.time||"23:59")>=now).sort((a,b)=>dateObj(a.date,a.meet||a.time)-dateObj(b.date,b.meet||b.time));
   const past=[...data.bookings].filter(b=>dateObj(b.date,b.meet||b.time||"23:59")<now).sort((a,b)=>dateObj(b.date,b.meet||b.time)-dateObj(a.date,a.meet||a.time));
-  document.getElementById("upcomingBookings").innerHTML=upcoming.length?upcoming.map(bookingHTML).join(""):empty("📍","No upcoming gigs.");
+  updateGigMonthFilter(upcoming);
+  const shownUpcoming=gigMonthFilter==="all"?upcoming:upcoming.filter(gig=>gigMonthKey(gig.date)===gigMonthFilter);
+  const count=document.getElementById("gigFilterCount");
+  if(count) count.textContent=`${shownUpcoming.length} gig${shownUpcoming.length===1?"":"s"} shown`;
+  document.getElementById("upcomingBookings").innerHTML=shownUpcoming.length
+    ?shownUpcoming.map(bookingHTML).join("")
+    :empty("📍",gigMonthFilter==="all"?"No upcoming gigs.":`No gigs in ${esc(gigMonthLabel(gigMonthFilter))}.`);
   document.getElementById("pastBookings").innerHTML=past.length?past.map(bookingHTML).join(""):empty("✓","No previous gigs yet.");
 }
+
+document.getElementById("gigMonthFilter")?.addEventListener("change",event=>{
+  gigMonthFilter=event.target.value || "all";
+  renderBookings();
+});
 
 window.goToTasks=function(){
   document.querySelectorAll(".page").forEach(page=>page.classList.remove("active"));
@@ -4801,6 +4910,7 @@ window.editBooking=function(id){
     return;
   }
   const b=data.bookings.find(x=>x.id===id);if(!b)return;
+  document.getElementById("bookingModalTitle").textContent="Edit gig";
   document.getElementById("bookingId").value=b.id;
   document.getElementById("bookingName").value=b.name;
   document.getElementById("bookingDate").value=b.date;
